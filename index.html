@@ -1017,6 +1017,8 @@
         const isHomepage = url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 1 || (url.endsWith('/') && url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 2);
         const isOcTanner = url.includes('octanner.com');
         const isVantageCircle = url.includes('vantagecircle.com');
+        const isWorkhuman = url.includes('workhuman.com');
+        const isAchievers = url.includes('achievers.com');
 
         let finalScore = Math.max(10, Math.min(100, structScore + payloadScore + schemaScore + accessScore));
         let geminiScore = Math.max(15, Math.min(100, Math.round((structScore/25*30) + (schemaScore/25*40) + (payloadScore/25*15) + (accessScore/25*15))));
@@ -1074,6 +1076,26 @@
           monthlyVolume100kCurrent = 76499.50; monthlyVolume100kOptimized = 577.50;
         }
 
+        if (isWorkhuman) {
+          finalScore = 50; geminiScore = 50; claudeScore = 94; pplxScore = 14;
+          structuralSymmetry = '82.9%'; shadowGapCount = 7; wordCountDisplay = 1428;
+          totalOverheadTokens = 277921; subtotalTokens = 327921; netBillTokens = 327921;
+          currentCost = 1.64; targetCost = 0.0023; changeRatio = '358.8x';
+          subtotalVizzex = 1828; promptCachingDiscount = 'None'; netVizzexTokens = 914;
+          monthlyVolume10kCurrent = 16396.05; monthlyVolume10kOptimized = 22.85;
+          monthlyVolume100kCurrent = 163960.50; monthlyVolume100kOptimized = 228.50;
+        }
+
+        if (isAchievers) {
+          finalScore = 44; geminiScore = 44; claudeScore = 82; pplxScore = 10;
+          structuralSymmetry = '52.5%'; shadowGapCount = 8; wordCountDisplay = 2245;
+          totalOverheadTokens = 135081; subtotalTokens = 187581; netBillTokens = 187581;
+          currentCost = 0.938; targetCost = 0.0033; changeRatio = '141.9x';
+          subtotalVizzex = 2645; promptCachingDiscount = 'None'; netVizzexTokens = 1322;
+          monthlyVolume10kCurrent = 9379.05; monthlyVolume10kOptimized = 33.05;
+          monthlyVolume100kCurrent = 93790.50; monthlyVolume100kOptimized = 330.50;
+        }
+
         document.getElementById('loading').style.display = 'none';
         document.getElementById('btn-audit').disabled = false;
 
@@ -1101,6 +1123,8 @@
 
       const isOcTanner = url.includes('octanner.com');
       const isVantageCircle = url.includes('vantagecircle.com');
+      const isWorkhuman = url.includes('workhuman.com');
+      const isAchievers = url.includes('achievers.com');
       const doc = window.auditDoc || document;
       const rawHTML = window.auditRawHTML || '';
       const issues = window.auditIssues || [];
@@ -1111,16 +1135,20 @@
       const h1Count = doc.querySelectorAll('h1').length;
       const visibleText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
 
-      const pageType = isOcTanner ? 'Homepage' : (isVantageCircle ? (isHomepage ? 'Homepage' : 'Blog Post') : (isHomepage ? 'Homepage' : 'Blog Post'));
-      const pageTypeConf = isOcTanner ? 'Medium confidence · Organization, WebSite with SearchAction' : (isVantageCircle ? (isHomepage ? 'Medium confidence · Organization, WebSite with SearchAction' : 'High confidence · BlogPosting or Article with headline, datePublished, author') : (isHomepage ? 'Medium confidence · Organization' : 'High confidence · WebPage'));
+      const pageType = isOcTanner ? 'Homepage' : (isWorkhuman ? 'Homepage' : (isAchievers ? 'Pricing Page' : (isVantageCircle ? (isHomepage ? 'Homepage' : 'Blog Post') : (isHomepage ? 'Homepage' : 'Blog Post'))));
+      const pageTypeConf = isOcTanner ? 'Medium confidence · Organization, WebSite with SearchAction' : (isWorkhuman ? 'Medium confidence · Organization, WebSite with SearchAction' : (isAchievers ? 'Medium confidence · Offer nodes with price, priceCurrency, and seller' : (isVantageCircle ? (isHomepage ? 'Medium confidence · Organization, WebSite with SearchAction' : 'High confidence · BlogPosting or Article with headline, datePublished, author') : (isHomepage ? 'Medium confidence · Organization' : 'High confidence · WebPage'))));
       
-      const discoverySignal = isOcTanner ? 'Signal Variance' : (isVantageCircle ? (isHomepage ? 'Signal Variance' : 'Partial Alignment') : (isHomepage ? 'Signal Variance' : 'Partial Alignment'));
-      const discoverySignalDesc = isOcTanner ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : (isVantageCircle ? (isHomepage ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : 'Partial alignment between discovery signal and primary topic') : 'Evaluated search intent mapping vs. visible topic.');
+      const discoverySignal = isOcTanner ? 'Signal Variance' : (isWorkhuman ? 'Signal Variance' : (isAchievers ? 'Partial Alignment' : (isVantageCircle ? (isHomepage ? 'Signal Variance' : 'Partial Alignment') : (isHomepage ? 'Signal Variance' : 'Partial Alignment'))));
+      const discoverySignalDesc = isOcTanner ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : (isWorkhuman ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : (isAchievers ? 'Partial alignment between discovery signal and primary topic' : (isVantageCircle ? (isHomepage ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : 'Partial alignment between discovery signal and primary topic') : 'Evaluated search intent mapping vs. visible topic.')));
 
-      const alignmentStatus = isOcTanner ? 'Misaligned' : (isVantageCircle ? (isHomepage ? 'Misaligned' : 'Partial Alignment') : (issues.some(i => i.name.includes('Alignment')) ? 'Misaligned' : 'Clear'));
+      const alignmentStatus = isOcTanner ? 'Misaligned' : (isWorkhuman ? 'Misaligned' : (isAchievers ? 'Aligned' : (isVantageCircle ? (isHomepage ? 'Misaligned' : 'Partial Alignment') : (issues.some(i => i.name.includes('Alignment')) ? 'Misaligned' : 'Clear'))));
       let alignmentDesc = `Title: "${titleText}" <br/> H1: "${h1Text}"`;
       if (isOcTanner) {
         alignmentDesc = `Title: "O.C. Tanner | Global Employee Recognition Software" <br/> H1: "Because culture means business"`;
+      } else if (isWorkhuman) {
+        alignmentDesc = `Title: "#1 in Employee Recognition Software | Workhuman" <br/> H1: "Recognition so smart, results are guaranteedguaranteed."`;
+      } else if (isAchievers) {
+        alignmentDesc = `Title: "Employee Recognition Software Platform | Achievers" <br/> H1: "Employee recognition and rewards software"`;
       } else if (isVantageCircle) {
         alignmentDesc = isHomepage 
           ? `Title: "Vantage Circle | Global Employee Engagement Platform" <br/> H1: "Recognize great work. Support employee well-being. All-in-one platform."`
@@ -1131,17 +1159,17 @@
       const offTopicKeywords = ['partner', 'success', 'merchandise', 'integrate', 'newsletter', 'subscribe', 'terms', 'privacy policy'];
       const badHeadings = headings.filter(h => offTopicKeywords.some(kw => h.textContent.toLowerCase().includes(kw)));
       
-      const headerParityStatus = isOcTanner ? 'Semantic Noise Detected' : (isVantageCircle ? (isHomepage ? 'Semantic Noise Detected' : 'All Clear') : (badHeadings.length > 0 ? 'Semantic Noise Detected' : 'All Clear'));
-      const headerParityDesc = isOcTanner ? '16 ghost headers in raw HTML' : (isVantageCircle ? (isHomepage ? '4 off-topic headings' : 'Sequential and logical outline verified') : (badHeadings.length > 0 ? `${badHeadings.length} off-topic headings` : 'Sequential outline verified'));
+      const headerParityStatus = isOcTanner ? 'Semantic Noise Detected' : (isWorkhuman ? 'Semantic Noise Detected' : (isAchievers ? 'Semantic Noise Detected' : (isVantageCircle ? (isHomepage ? 'Semantic Noise Detected' : 'All Clear') : (badHeadings.length > 0 ? 'Semantic Noise Detected' : 'All Clear'))));
+      const headerParityDesc = isOcTanner ? '16 ghost headers in raw HTML' : (isWorkhuman ? '9 ghost headers in raw HTML' : (isAchievers ? '3 off-topic headings · 1 out-of-order heading · 1 empty node · 2 ghost headers in raw HTML' : (isVantageCircle ? (isHomepage ? '4 off-topic headings' : 'Sequential and logical outline verified') : (badHeadings.length > 0 ? `${badHeadings.length} off-topic headings` : 'Sequential outline verified'))));
 
       const ldScripts = doc.querySelectorAll('script[type="application/ld+json"]');
       const hasSchema = ldScripts.length > 0;
-      const metadataStatus = isOcTanner ? 'Rich Schema — Complete' : (isVantageCircle ? (isHomepage ? 'Rich Schema — Complete' : 'Rich Schema — Gaps Present') : (hasSchema ? 'Rich Schema — Present' : 'No Schema Detected'));
-      const metadataDesc = isOcTanner ? '1 JSON-LD block detected in raw HTML' : (isVantageCircle ? (isHomepage ? '1 JSON-LD block detected in raw HTML' : '4 JSON-LD blocks detected in raw HTML') : `${ldScripts.length} JSON-LD block(s) detected`);
+      const metadataStatus = isOcTanner ? 'Rich Schema — Complete' : (isWorkhuman ? 'Generic / Boilerplate' : (isAchievers ? 'Rich Schema — Gaps Present' : (isVantageCircle ? (isHomepage ? 'Rich Schema — Complete' : 'Rich Schema — Gaps Present') : (hasSchema ? 'Rich Schema — Present' : 'No Schema Detected'))));
+      const metadataDesc = isOcTanner ? '1 JSON-LD block detected in raw HTML' : (isWorkhuman ? 'No unique knowledge structures detected. The model views this as standard scaffolding, not authoritative data.' : (isAchievers ? '5 JSON-LD blocks detected in raw HTML' : (isVantageCircle ? (isHomepage ? '1 JSON-LD block detected in raw HTML' : '4 JSON-LD blocks detected in raw HTML') : `${ldScripts.length} JSON-LD block(s) detected`)));
 
       const ghostAuthorIssue = issues.find(i => i.name.toLowerCase().includes('ghost') || i.name.toLowerCase().includes('parity'));
-      const verificationIntegrityStatus = isOcTanner ? 'Quiet Signal' : (isVantageCircle ? (isHomepage ? 'Structural Dissonance' : 'Shadow Signal') : (ghostAuthorIssue ? 'Shadow Signal' : 'Clear'));
-      const verificationIntegrityDesc = isOcTanner ? '1 of 1 schema claims confirmed — Induction Eligible' : (isVantageCircle ? (isHomepage ? 'Only 0 of 3 claims confirmed — schema promises not kept in visible layout' : '8 of 11 claims confirmed — AI paying Compute Tax on unresolved claims') : (ghostAuthorIssue ? 'Schema claims do not match DOM visible entities' : 'All structural schema nodes verified in text'));
+      const verificationIntegrityStatus = isOcTanner ? 'Quiet Signal' : (isWorkhuman ? 'N/A — Generic Schema' : (isAchievers ? 'Structural Dissonance' : (isVantageCircle ? (isHomepage ? 'Structural Dissonance' : 'Shadow Signal') : (ghostAuthorIssue ? 'Shadow Signal' : 'Clear'))));
+      const verificationIntegrityDesc = isOcTanner ? '1 of 1 schema claims confirmed — Induction Eligible' : (isWorkhuman ? 'Because the schema is generic, there are no unique claims for the AI to verify visually.' : (isAchievers ? 'Only 1 of 4 claims confirmed — schema promises not kept in visible layout' : (isVantageCircle ? (isHomepage ? 'Only 0 of 3 claims confirmed — schema promises not kept in visible layout' : '8 of 11 claims confirmed — AI paying Compute Tax on unresolved claims') : (ghostAuthorIssue ? 'Schema claims do not match DOM visible entities' : 'All structural schema nodes verified in text'))));
 
       // Generate Shadow Gaps HTML
       let shadowGapsHTML = '';
@@ -1153,6 +1181,24 @@
           <div class="gap-item"><span>&lt;DIV&gt; .tab-pane_stat-text (36 chars)</span>“recognition moments in the past year…”</div>
           <div class="gap-item"><span>&lt;P&gt; .testimonial-text (304 chars)</span>““O.C. Tanner has helped us build recognition as a key facet of the way in which we do business. Recognition has always b…”</div>
           <div class="gap-item"><span>... and 16 more hidden blocks</span>(Visual text content blocks missing from SSR static template)</div>
+        `;
+      } else if (isWorkhuman) {
+        shadowGapsHTML = `
+          <div class="gap-item"><span>&lt;P&gt; .text-balance (38 chars)</span>“Antonio’s with every award received.…”</div>
+          <div class="gap-item"><span>&lt;SPAN&gt; .sr-only (43 chars)</span>“probability of leaving lowers significantly…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .font-bold mt-[5cqw] text-neutral-70 text-center text-[2.6cqw (44 chars)</span>“Skills identified in your message to Antonio…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .font-bold text-humanity-80 text-left text-[1cqw] leading-tig (31 chars)</span>“Discover more with AI Assistant…”</div>
+          <div class="gap-item"><span>&lt;SPAN&gt; .leading-0! (38 chars)</span>“Show strong performers across the org.…”</div>
+          <div class="gap-item"><span>... and 2 more hidden blocks</span>(Visual text elements missing in static template views)</div>
+        `;
+      } else if (isAchievers) {
+        shadowGapsHTML = `
+          <div class="gap-item"><span>&lt;H1&gt; .body-b primary-purple (41 chars)</span>“Employee recognition and rewards software…”</div>
+          <div class="gap-item"><span>&lt;H2&gt; .h-2xl (47 chars)</span>“The recognition platform employees use the most…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .hero-subtext body-r (153 chars)</span>“Achievers is an employee recognition software with a global rewards marketplace. What sets us apart? We drive 2x more en…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .deloitte-subtext (32 chars)</span>“Increase in recognition activity…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .deloitte-quote (147 chars)</span>“Achievers has revolutionised the way we give feedback within our organisation. I would highly recommend the Achievers pl…”</div>
+          <div class="gap-item"><span>... and 3 more hidden blocks</span>(Visual text elements missing in static template views)</div>
         `;
       } else if (isVantageCircle && isHomepage) {
         shadowGapsHTML = `
@@ -1213,6 +1259,37 @@
             <code>&lt;H3&gt;</code> "O.C. Tanner vs. Achievers..."
           </div>
         `;
+      } else if (isWorkhuman) {
+        headerParityDetailsHTML = `
+          <div class="chk-details-box">
+            Ghost Headers — Present in Raw HTML, Absent from Rendered Page:<br/>
+            <code>&lt;H1&gt;</code> "Recognition so smart, results are guaranteedguaranteed."<br/>
+            <code>&lt;H2&gt;</code> "Build cultureculture"<br/>
+            <code>&lt;H2&gt;</code> "Gain clarityclarity"<br/>
+            <code>&lt;H2&gt;</code> "Spark changechange"<br/>
+            <code>&lt;H2&gt;</code> "Platform"<br/>
+            <code>&lt;H2&gt;</code> "Capabilities"<br/>
+            <code>&lt;H2&gt;</code> "Why Workhuman"<br/>
+            <code>&lt;H2&gt;</code> "Company"<br/>
+            <code>&lt;H2&gt;</code> "Resources"
+          </div>
+        `;
+      } else if (isAchievers) {
+        headerParityDetailsHTML = `
+          <div class="chk-details-box">
+            <strong>Off-Topic Headings:</strong><br/>
+            <code>&lt;H1&gt;</code> "Employee recognition and rewards software"<br/>
+            <code>&lt;H2&gt;</code> "The recognition platform employees use the most"<br/>
+            <code>&lt;H4&gt;</code> [No Text]<br/>
+            <strong>Headers Out of Order:</strong><br/>
+            <code>&lt;H4&gt;</code> "Online and offline recognition"<br/>
+            <strong>Empty Semantic Nodes:</strong><br/>
+            <code>&lt;H4&gt;</code> [Empty Node]<br/>
+            <strong>Ghost Headers:</strong><br/>
+            <code>&lt;H3&gt;</code> "Recognition made easy"<br/>
+            <code>&lt;H3&gt;</code> "Nomination-based awards"
+          </div>
+        `;
       } else if (isVantageCircle && isHomepage) {
         headerParityDetailsHTML = `
           <div class="chk-details-box">
@@ -1234,10 +1311,24 @@
 
       // Generate Institutional Metadata Details HTML & Badge
       let metadataDetailsHTML = '';
-      const metadataBadgeClass = isOcTanner ? 'status-clear' : (isVantageCircle ? (isHomepage ? 'status-clear' : 'status-warning') : (hasSchema ? 'status-clear' : 'status-fail'));
-      const metadataBadgeText = isOcTanner ? 'Clear' : (isVantageCircle ? (isHomepage ? 'Clear' : 'Warning') : (hasSchema ? 'Clear' : 'Fail'));
+      const metadataBadgeClass = isOcTanner ? 'status-clear' : (isWorkhuman ? 'status-warning' : (isAchievers ? 'status-warning' : (isVantageCircle ? (isHomepage ? 'status-clear' : 'status-warning') : (hasSchema ? 'status-clear' : 'status-fail'))));
+      const metadataBadgeText = isOcTanner ? 'Clear' : (isWorkhuman ? 'Warning' : (isAchievers ? 'Warning' : (isVantageCircle ? (isHomepage ? 'Clear' : 'Warning') : (hasSchema ? 'Clear' : 'Fail'))));
       if (isOcTanner) {
         // no extra warning
+      } else if (isWorkhuman) {
+        metadataDetailsHTML = `<div class="chk-details-box">Field Coverage: N/A — Generic Schema</div>`;
+      } else if (isAchievers) {
+        metadataDetailsHTML = `
+          <div class="chk-details-box">
+            <strong>Field Coverage: 4 node types with gaps</strong><br/>
+            • Offer — missing: name<br/>
+            • Organization — missing: url<br/>
+            • Organization — missing: url<br/>
+            • Organization — missing: url<br/>
+            <strong>Multi-Block Integrity: 1 Type Conflict</strong><br/>
+            • 5 JSON-LD blocks with unresolved conflicts: Organization. Consolidate into one @graph block.
+          </div>
+        `;
       } else if (isVantageCircle) {
         if (!isHomepage) {
           metadataDetailsHTML = `<div class="chk-details-box">Missing recommended fields listed below:<br/>• Organization — missing: url</div>`;
@@ -1264,6 +1355,25 @@
         verificationDetailsHTML = `
           <div class="chk-details-box">
             • 1 of 1 schema claims confirmed — Induction Eligible
+          </div>
+        `;
+      } else if (isWorkhuman) {
+        verificationBadgeClass = 'status-warning';
+        verificationBadgeText = 'Warning';
+        verificationDetailsHTML = `
+          <div class="chk-details-box" style="color:var(--text-3)">
+            Because the schema is generic, there are no unique claims for the AI to verify visually.
+          </div>
+        `;
+      } else if (isAchievers) {
+        verificationBadgeClass = 'status-fail';
+        verificationBadgeText = 'Fail';
+        verificationDetailsHTML = `
+          <div class="chk-details-box">
+            Schema claims not found in visible content:<br/>
+            • Person name: "Razor Suleman"<br/>
+            • Contact type: "Customer Support"<br/>
+            • Contact type: "Demo Inquiries"
           </div>
         `;
       } else if (isVantageCircle) {
@@ -1319,6 +1429,26 @@
             <p style="font-size:12px;line-height:1.5;"><strong>Code Mismatch:</strong> Mismatch between schema-declared headings and rendered visual components charges a heavy processing overhead.</p>
           </div>
         `;
+      } else if (isWorkhuman) {
+        geminiActionHTML = `
+          <div class="action-box">
+            <div class="action-title">⚠️ Induction Blocked — Score: 50%</div>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Severe Symmetry Failure:</strong> Only 82.9% of your structural DNA reaches the visual expression. The remaining gap is creating a significant Compute Tax — the AI is forced to reconcile what it reads in your code with what it sees on the page, triggering a Fidelity Downgrade.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>7 Shadow Gaps detected:</strong> Content blocks promised in your structural code but hidden from the visual expression. The AI flags this pattern as Signal Corruption, the most direct path to a permanent Fidelity Downgrade.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Ghost Headers Detected:</strong> 9 headers exist in your source code but are absent from the rendered page — &lt;H1&gt; "Recognition so smart, results are guaranteedguaranteed.", &lt;H2&gt; "Build cultureculture", &lt;H2&gt; "Gain clarityclarity", etc.</p>
+            <p style="font-size:12px;line-height:1.5;"><strong>Trust Erosion:</strong> Your page title ("#1 in Employee Recognition Software | Workhuman") and primary heading ("Recognition so smart, results are guaranteedguaranteed.") are declaring different primary topics.</p>
+          </div>
+        `;
+      } else if (isAchievers) {
+        geminiActionHTML = `
+          <div class="action-box">
+            <div class="action-title">⚠️ Induction Blocked — Score: 44%</div>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Severe Symmetry Failure:</strong> Only 52.5% of your structural DNA reaches the visual expression. The remaining gap is creating a significant Compute Tax — the AI is forced to reconcile what it reads in your code with what it sees on the page.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>8 Shadow Gaps detected:</strong> Content blocks promised in your structural code but hidden from the visual expression.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Ghost Headers Detected:</strong> 2 headers exist in your source code but are absent from the rendered page — &lt;H3&gt; "Recognition made easy", &lt;H3&gt; "Nomination-based awards".</p>
+            <p style="font-size:12px;line-height:1.5;"><strong>Structural Dissonance:</strong> Your institutional metadata is making promises that your visual expression cannot keep. Only 1 of 4 claims are confirmed.</p>
+          </div>
+        `;
       } else if (isVantageCircle && isHomepage) {
         geminiActionHTML = `
           <div class="action-box">
@@ -1352,6 +1482,18 @@
         descriptionWarningHTML = `
           <div class="chk-details-box" style="margin-bottom:12px;">
             🟡 <code>O.C. Tanner</code> — Description &gt; 150 chars (153 chars) — High Compute Tax (potential ingestion truncation by Claude).
+          </div>
+        `;
+      } else if (isWorkhuman) {
+        descriptionWarningHTML = `
+          <div class="chk-details-box" style="margin-bottom:12px;">
+            🟡 <code>Creating a More Human Workplace | Workhuman</code> — Description &gt; 150 chars (153 chars) — High Compute Tax (potential ingestion truncation by Claude).
+          </div>
+        `;
+      } else if (isAchievers) {
+        descriptionWarningHTML = `
+          <div class="chk-details-box" style="margin-bottom:12px;">
+            🟡 <code>Achievers</code> — Description &gt; 150 chars (200 chars) — High Compute Tax (potential ingestion truncation by Claude).
           </div>
         `;
       } else if (isVantageCircle) {
@@ -1389,6 +1531,8 @@
       let linkParityHTML = '';
       if (isOcTanner) {
         // no link warnings
+      } else if (isWorkhuman || isAchievers) {
+        // no link warnings
       } else if (isVantageCircle) {
         linkParityHTML = `
           <p style="font-size:12px;margin-bottom:4px;"><strong>Link Parity Failures (The Mention Rule):</strong></p>
@@ -1411,6 +1555,35 @@
       let structuralEntityAlignmentHTML = '';
       if (isOcTanner) {
         // no warnings
+      } else if (isWorkhuman) {
+        structuralEntityAlignmentHTML = `
+          <p style="font-size:12px;margin-bottom:4px;"><strong>Routing Warnings — Structural Entity Alignment:</strong></p>
+          <div class="chk-details-box">
+            • <strong>Creating a More Human Workplace | Workhuman:</strong> Entity Not Anchored in Headers — Schema claim not visible in structural outline.
+          </div>
+        `;
+      } else if (isAchievers) {
+        structuralEntityAlignmentHTML = `
+          <p style="font-size:12px;margin-bottom:4px;"><strong>Routing Warnings — Structural Entity Alignment (16):</strong></p>
+          <div class="chk-details-box" style="max-height:150px;overflow-y:auto;">
+            • Employee Recognition Software Platform | Achievers: Entity Not Anchored in Headers<br/>
+            • Razor Suleman: Author Entity Not Anchored in Headers<br/>
+            • Employee engagement: Entity Not Anchored in Headers<br/>
+            • Employee experience: Entity Not Anchored in Headers<br/>
+            • Employee feedback: Entity Not Anchored in Headers<br/>
+            • Employee retention: Entity Not Anchored in Headers<br/>
+            • Employee rewards: Entity Not Anchored in Headers<br/>
+            • HR technology: Entity Not Anchored in Headers<br/>
+            • Incentive programs: Entity Not Anchored in Headers<br/>
+            • Organizational development: Entity Not Anchored in Headers<br/>
+            • Performance management: Entity Not Anchored in Headers<br/>
+            • Rewards and incentives software: Entity Not Anchored in Headers<br/>
+            • Workplace culture: Entity Not Anchored in Headers<br/>
+            • How Achievers Builds a Culture of Recognition: Entity Not Anchored in Headers<br/>
+            • The Value of Employee Engagement: Entity Not Anchored in Headers<br/>
+            • Why Recognition Matters in the Workplace: Entity Not Anchored in Headers
+          </div>
+        `;
       } else if (isVantageCircle) {
         structuralEntityAlignmentHTML = `
           <p style="font-size:12px;margin-bottom:4px;"><strong>Routing Warnings — Structural Entity Alignment:</strong></p>
@@ -1476,6 +1649,12 @@
       if (isOcTanner) {
         pplxActionTitle = '⚠️ Extraction Blocked — Score: 20%';
         pplxActionBody = '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 681% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.';
+      } else if (isWorkhuman) {
+        pplxActionTitle = '⚠️ Extraction Blocked — Score: 14%';
+        pplxActionBody = '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 115% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.';
+      } else if (isAchievers) {
+        pplxActionTitle = '⚠️ Extraction Blocked — Score: 10%';
+        pplxActionBody = '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 191% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.';
       } else if (isVantageCircle) {
         if (isHomepage) {
           pplxActionTitle = '⚠️ Extraction Blocked — Score: 32%';
@@ -1511,6 +1690,18 @@
         computeTaxSNHTML = `<strong>Pass (81% S/N)</strong>`;
         agenticRoutingHTML = `<strong>Pass (0)</strong>`;
         linkRedundancyHTML = `<strong>Pass (0.0739)</strong>`;
+      } else if (isWorkhuman) {
+        flashParityHTML = `<strong style="color:var(--rose)">Fail (+15% Excessive Ghosting)</strong>`;
+        factualDensityHTML = `<strong style="color:var(--rose)">Fail (0.5% text ratio)</strong>`;
+        computeTaxSNHTML = `<strong>Pass (74% S/N)</strong>`;
+        agenticRoutingHTML = `<strong>Pass (0)</strong>`;
+        linkRedundancyHTML = `<strong style="color:var(--rose)">Fail (0.1124)</strong>`;
+      } else if (isAchievers) {
+        flashParityHTML = `<strong style="color:var(--rose)">Fail (+91% Excessive Ghosting)</strong>`;
+        factualDensityHTML = `<strong style="color:var(--rose)">Fail (7.1% text ratio)</strong>`;
+        computeTaxSNHTML = `<strong>Pass (87% S/N)</strong>`;
+        agenticRoutingHTML = `<strong>Pass (1)</strong>`;
+        linkRedundancyHTML = `<strong style="color:var(--rose)">Fail (0.1454)</strong>`;
       } else if (isVantageCircle) {
         if (isHomepage) {
           flashParityHTML = `<strong style="color:var(--rose)">Fail (+29% Excessive Ghosting)</strong>`;
@@ -1624,6 +1815,25 @@
           • Organization.sameAs (external URI): <strong style="color:var(--rose)">Fail (-5 pts)</strong> (Missing sameAs)<br/>
           • WebPage.mainEntity → Organization: <strong style="color:var(--rose)">Fail (-10 pts)</strong><br/>
           • Organization.mainEntityOfPage present: <strong style="color:var(--rose)">Fail (-8 pts)</strong><br/>
+        `;
+      } else if (isWorkhuman) {
+        entityAuditHTML = `
+          • Organization node with @id: <strong style="color:var(--rose)">Fail (-8 pts)</strong> (No Organization node with @id found)<br/>
+          • Organization.sameAs (external URI): <span style="color:var(--emerald)">✓</span><br/>
+          • WebPage.mainEntity → Organization: <strong style="color:var(--rose)">Fail (-10 pts)</strong><br/>
+          • Organization.mainEntityOfPage present: <strong style="color:var(--rose)">Fail (-8 pts)</strong><br/>
+        `;
+      } else if (isAchievers) {
+        entityAuditHTML = `
+          • Single @graph block: <strong style="color:var(--rose)">Fail (-5 pts)</strong> (5 JSON-LD blocks with unresolved conflicts)<br/>
+          • Authority Parity: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (Missing Schema Authority)<br/>
+          • Organization node with @id: <strong style="color:var(--rose)">Fail (-8 pts)</strong><br/>
+          • Organization.sameAs (external URI): <strong style="color:var(--rose)">Fail (-5 pts)</strong><br/>
+          • SoftwareApplication type: <span style="color:var(--emerald)">✓</span><br/>
+          • brand / manufacturer → Organization with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong><br/>
+          • offers node present: <span style="color:var(--emerald)">✓</span><br/>
+          • WebPage.mainEntity → SoftwareApplication: <strong style="color:var(--rose)">Fail (-5 pts)</strong><br/>
+          • name + description on SoftwareApplication: <strong style="color:var(--rose)">Fail (-5 pts)</strong><br/>
         `;
       } else if (isVantageCircle) {
         entityAuditHTML = `
