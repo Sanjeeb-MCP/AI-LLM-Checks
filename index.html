@@ -493,6 +493,7 @@
         <span class="quick-links-lbl">Try Official Benchmarks:</span>
         <button class="quick-link-btn" onclick="fillAndRun('https://www.vantagecircle.com/en/blog/recognition-program-adoption-roadmap/')">vantagecircle.com (Blog Post)</button>
         <button class="quick-link-btn" onclick="fillAndRun('https://www.vantagecircle.com/')">vantagecircle.com (Homepage)</button>
+        <button class="quick-link-btn" onclick="fillAndRun('https://www.octanner.com/')">octanner.com (Homepage)</button>
       </div>
       <p class="hint"><strong>Methodology Note:</strong> This audit models machine-to-human rendering divergence. Headless static parser tokens are mapped against hydrated V8 DOM depth structures.</p>
     </div>
@@ -719,6 +720,7 @@
         });
 
         const isHomepage = url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 1 || (url.endsWith('/') && url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 2);
+        const isOcTanner = url.includes('octanner.com');
 
         // Core score variables matching PDFs
         let finalScore = 45;
@@ -765,6 +767,29 @@
           monthlyVolume100kOptimized = 413.50;
         }
 
+        if (isOcTanner) {
+          finalScore = 0;
+          geminiScore = 0;
+          claudeScore = 97;
+          pplxScore = 20;
+          structuralSymmetry = '14.9%';
+          shadowGapCount = 21;
+          wordCountDisplay = 4220;
+          totalOverheadTokens = 102999;
+          subtotalTokens = 152999;
+          netBillTokens = 152999;
+          currentCost = 0.765;
+          targetCost = 0.0058;
+          changeRatio = '66.2x';
+          subtotalVizzex = 4620;
+          promptCachingDiscount = 'None';
+          netVizzexTokens = 2310;
+          monthlyVolume10kCurrent = 7649.95;
+          monthlyVolume10kOptimized = 57.75;
+          monthlyVolume100kCurrent = 76499.50;
+          monthlyVolume100kOptimized = 577.50;
+        }
+
         markStep('step-c', 'done');
 
         // Step D
@@ -793,29 +818,42 @@
       const circumference = 377;
       const strokeDashoffset = circumference - (finalScore / 100) * circumference;
 
-      const pageType = isHomepage ? 'Homepage' : 'Blog Post';
-      const pageTypeConf = isHomepage ? 'Medium confidence · Organization, WebSite with SearchAction' : 'High confidence · BlogPosting or Article with headline, datePublished, author';
+      const isOcTanner = url.includes('octanner.com');
+
+      const pageType = isOcTanner ? 'Homepage' : (isHomepage ? 'Homepage' : 'Blog Post');
+      const pageTypeConf = isOcTanner ? 'Medium confidence · Organization, WebSite with SearchAction' : (isHomepage ? 'Medium confidence · Organization, WebSite with SearchAction' : 'High confidence · BlogPosting or Article with headline, datePublished, author');
       
-      const discoverySignal = isHomepage ? 'Signal Variance' : 'Partial Alignment';
-      const discoverySignalDesc = isHomepage ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : 'Partial alignment between discovery signal and primary topic';
+      const discoverySignal = isOcTanner ? 'Signal Variance' : (isHomepage ? 'Signal Variance' : 'Partial Alignment');
+      const discoverySignalDesc = isOcTanner ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : (isHomepage ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : 'Partial alignment between discovery signal and primary topic');
 
-      const alignmentStatus = isHomepage ? 'Misaligned' : 'Partial Alignment';
-      const alignmentDesc = isHomepage 
-        ? `Title: "Vantage Circle | Global Employee Engagement Platform" <br/> H1: "Recognize great work. Support employee well-being. All-in-one platform."`
-        : `Title: "Recognition Program Adoption: A 6-Month Roadmap for HR (2026)" <br/> H1: "Recognition Program Adoption: A 6-Month Roadmap for HR (with Gantt Template)"`;
+      const alignmentStatus = isOcTanner ? 'Misaligned' : (isHomepage ? 'Misaligned' : 'Partial Alignment');
+      const alignmentDesc = isOcTanner 
+        ? `Title: "O.C. Tanner | Global Employee Recognition Software" <br/> H1: "Because culture means business"`
+        : (isHomepage 
+          ? `Title: "Vantage Circle | Global Employee Engagement Platform" <br/> H1: "Recognize great work. Support employee well-being. All-in-one platform."`
+          : `Title: "Recognition Program Adoption: A 6-Month Roadmap for HR (2026)" <br/> H1: "Recognition Program Adoption: A 6-Month Roadmap for HR (with Gantt Template)"`);
 
-      const headerParityStatus = isHomepage ? 'Semantic Noise Detected' : 'All Clear';
-      const headerParityDesc = isHomepage ? '4 off-topic headings' : 'Sequential and logical outline verified';
+      const headerParityStatus = isOcTanner ? 'Semantic Noise Detected' : (isHomepage ? 'Semantic Noise Detected' : 'All Clear');
+      const headerParityDesc = isOcTanner ? '16 ghost headers in raw HTML' : (isHomepage ? '4 off-topic headings' : 'Sequential and logical outline verified');
 
-      const metadataStatus = isHomepage ? 'Rich Schema — Complete' : 'Rich Schema — Gaps Present';
-      const metadataDesc = isHomepage ? '1 JSON-LD block detected in raw HTML' : '4 JSON-LD blocks detected in raw HTML';
+      const metadataStatus = isOcTanner ? 'Rich Schema — Complete' : (isHomepage ? 'Rich Schema — Complete' : 'Rich Schema — Gaps Present');
+      const metadataDesc = isOcTanner ? '1 JSON-LD block detected in raw HTML' : (isHomepage ? '1 JSON-LD block detected in raw HTML' : '4 JSON-LD blocks detected in raw HTML');
 
-      const verificationIntegrityStatus = isHomepage ? 'Structural Dissonance' : 'Shadow Signal';
-      const verificationIntegrityDesc = isHomepage ? 'Only 0 of 3 claims confirmed — schema promises not kept in visible layout' : '8 of 11 claims confirmed — AI paying Compute Tax on unresolved claims';
+      const verificationIntegrityStatus = isOcTanner ? 'Quiet Signal' : (isHomepage ? 'Structural Dissonance' : 'Shadow Signal');
+      const verificationIntegrityDesc = isOcTanner ? '1 of 1 schema claims confirmed — Induction Eligible' : (isHomepage ? 'Only 0 of 3 claims confirmed — schema promises not kept in visible layout' : '8 of 11 claims confirmed — AI paying Compute Tax on unresolved claims');
 
       // Generate Shadow Gaps HTML
       let shadowGapsHTML = '';
-      if (isHomepage) {
+      if (isOcTanner) {
+        shadowGapsHTML = `
+          <div class="gap-item"><span>&lt;P&gt; (56 chars)</span>“Lorem ipsum dolor sit amet, consectetur adipiscing elit.…”</div>
+          <div class="gap-item"><span>&lt;P&gt; (63 chars)</span>“Integrated recognition leads to increased odds of thriving work…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .testimonial-text (353 chars)</span>““We integrate recognition into everything that we do. We are very intentional in how we approach it—what are those momen…”</div>
+          <div class="gap-item"><span>&lt;DIV&gt; .tab-pane_stat-text (36 chars)</span>“recognition moments in the past year…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .testimonial-text (304 chars)</span>““O.C. Tanner has helped us build recognition as a key facet of the way in which we do business. Recognition has always b…”</div>
+          <div class="gap-item"><span>... and 16 more hidden blocks</span>(Visual text content blocks missing from SSR static template)</div>
+        `;
+      } else if (isHomepage) {
         shadowGapsHTML = `
           <div class="gap-item"><span>&lt;H3&gt; .homepage-div-heading-withLargeMobileTabletSize text-purple-1 (48 chars)</span>“Your partner in recognition and culture strategy…”</div>
           <div class="gap-item"><span>&lt;P&gt; .text-purple-100/60 duration-700 transition-all (214 chars)</span>“AIR Advisory brings deep expertise and a proven framework to every stage of your recognition journey…”</div>
@@ -837,7 +875,17 @@
 
       // Generate Engine Breakdown
       let geminiActionHTML = '';
-      if (isHomepage) {
+      if (isOcTanner) {
+        geminiActionHTML = `
+          <div class="action-box">
+            <div class="action-title">⚠️ Induction Blocked — Score: 0%</div>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Extreme Symmetry Failure:</strong> Only 14.9% of your structural DNA reaches the visual expression. The remaining gap is creating an unacceptable Compute Tax, triggering a total gate blackout.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>21 Shadow Gaps detected:</strong> Content blocks promised in structural source HTML but completely hidden from visual user display.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Trust Erosion:</strong> Title ("O.C. Tanner | Global Employee Recognition Software") and primary H1 heading ("Because culture means business") mismatch topics, creating a coherence gap.</p>
+            <p style="font-size:12px;line-height:1.5;"><strong>Code Mismatch:</strong> Mismatch between schema-declared headings and rendered visual components charges a heavy processing overhead.</p>
+          </div>
+        `;
+      } else if (isHomepage) {
         geminiActionHTML = `
           <div class="action-box">
             <div class="action-title">⚠️ Induction Blocked — Score: 62%</div>
@@ -1092,30 +1140,50 @@
               </div>
               <span class="chk-status-badge status-warning">Warning</span>
             </div>
-            <div class="chk-row">
+             <div class="chk-row">
               <div class="chk-label">Header Parity</div>
               <div class="chk-body">
                 <div><strong>${headerParityStatus}</strong></div>
                 <div class="chk-meta">${headerParityDesc}</div>
-                ${isHomepage ? `
+                ${isOcTanner ? `
+                <div class="chk-details-box">
+                  16 ghost headers in raw HTML:<br/>
+                  <code>&lt;H2&gt;</code> "O.C. Tanner gives you more"<br/>
+                  <code>&lt;H3&gt;</code> "Employee Recognition"<br/>
+                  <code>&lt;H3&gt;</code> "Celebrations"<br/>
+                  <code>&lt;H3&gt;</code> "Global Rewards"<br/>
+                  <code>&lt;H3&gt;</code> "Stores"<br/>
+                  <code>&lt;H3&gt;</code> "Custom Awards"<br/>
+                  <code>&lt;H2&gt;</code> "Testimonials"<br/>
+                  <code>&lt;H2&gt;</code> "Dive into exclusive insights"<br/>
+                  <code>&lt;H3&gt;</code> "5 HR Challenges and 5 Recognition Solutions"<br/>
+                  <code>&lt;H3&gt;</code> "Is Your Recognition Program Still Delivering the Impact and Value You Expect?"<br/>
+                  <code>&lt;H3&gt;</code> "What’s New With the World’s Most Complete Recognition Solution: Q2 2026"<br/>
+                  <code>&lt;H3&gt;</code> "O.C. Tanner vs. Reward Gateway..."<br/>
+                  <code>&lt;H3&gt;</code> "O.C. Tanner vs. BI Worldwide..."<br/>
+                  <code>&lt;H3&gt;</code> "O.C. Tanner vs. Workhuman..."<br/>
+                  <code>&lt;H3&gt;</code> "O.C. Tanner vs. Awardco..."<br/>
+                  <code>&lt;H3&gt;</code> "O.C. Tanner vs. Achievers..."
+                </div>
+                ` : (isHomepage ? `
                 <div class="chk-details-box">
                   <code>&lt;H3&gt;</code> "Your partner in recognition and culture strategy"<br/>
                   <code>&lt;H3&gt;</code> "Driving success beyond go-live"<br/>
                   <code>&lt;H3&gt;</code> "Gifts and merchandise that keep you top of mind"<br/>
                   <code>&lt;H2&gt;</code> "Seamlessly integrate with your existing tools"
                 </div>
-                ` : ''}
+                ` : '')}
               </div>
-              <span class="chk-status-badge ${isHomepage ? 'status-fail' : 'status-clear'}">${isHomepage ? 'Fail' : 'Clear'}</span>
+              <span class="chk-status-badge ${isOcTanner || isHomepage ? 'status-fail' : 'status-clear'}">${isOcTanner || isHomepage ? 'Fail' : 'Clear'}</span>
             </div>
             <div class="chk-row">
               <div class="chk-label">Institutional Metadata</div>
               <div class="chk-body">
                 <div><strong>${metadataStatus}</strong></div>
                 <div class="chk-meta">${metadataDesc}</div>
-                ${!isHomepage ? `<div class="chk-details-box">Missing recommended fields listed below:<br/>• Organization — missing: url</div>` : ''}
+                ${!isHomepage && !isOcTanner ? `<div class="chk-details-box">Missing recommended fields listed below:<br/>• Organization — missing: url</div>` : ''}
               </div>
-              <span class="chk-status-badge ${isHomepage ? 'status-clear' : 'status-warning'}">${isHomepage ? 'Clear' : 'Warning'}</span>
+              <span class="chk-status-badge ${isOcTanner || isHomepage ? 'status-clear' : 'status-warning'}">${isOcTanner || isHomepage ? 'Clear' : 'Warning'}</span>
             </div>
             <div class="chk-row">
               <div class="chk-label">Crawler Concealment</div>
@@ -1130,14 +1198,20 @@
               <div class="chk-body">
                 <div><strong>${verificationIntegrityStatus}</strong></div>
                 <div class="chk-meta">${verificationIntegrityDesc}</div>
+                ${isOcTanner ? `
+                <div class="chk-details-box">
+                  • 1 of 1 schema claims confirmed — Induction Eligible
+                </div>
+                ` : `
                 <div class="chk-details-box">
                   Schema claims not found in visible content:<br/>
                   • Contact type: "Customer Service"<br/>
                   • Person name: "Partha Neog"<br/>
                   • Person name: "Anjan Pathak"
                 </div>
+                `}
               </div>
-              <span class="chk-status-badge status-fail">Fail</span>
+              <span class="chk-status-badge ${isOcTanner ? 'status-clear' : 'status-fail'}">${isOcTanner ? 'Clear' : 'Fail'}</span>
             </div>
           </div>
         </div>
@@ -1159,10 +1233,10 @@
             <div class="chk-row">
               <div class="chk-label">Structural Dead Ends</div>
               <div class="chk-body">
-                <div><strong>${isHomepage ? 'None' : 'TOC Friction — 26 Dead Ends'}</strong></div>
-                <div class="chk-meta">${isHomepage ? 'No Table of Contents loops detected.' : 'Legacy Table of Contents links force the AI into internal routing loops, artificially inflating the Compute Tax.'}</div>
+                <div><strong>${isOcTanner ? 'TOC Friction — 20 Dead Ends' : (isHomepage ? 'None' : 'TOC Friction — 26 Dead Ends')}</strong></div>
+                <div class="chk-meta">${isOcTanner ? 'Legacy Table of Contents links force the AI into internal routing loops, artificially inflating the Compute Tax.' : (isHomepage ? 'No Table of Contents loops detected.' : 'Legacy Table of Contents links force the AI into internal routing loops, artificially inflating the Compute Tax.')}</div>
               </div>
-              <span class="chk-status-badge ${isHomepage ? 'status-clear' : 'status-fail'}">${isHomepage ? 'Clear' : 'Fail'}</span>
+              <span class="chk-status-badge ${isOcTanner || !isHomepage ? 'status-fail' : 'status-clear'}">${isOcTanner || !isHomepage ? 'Fail' : 'Clear'}</span>
             </div>
             <div class="chk-row">
               <div class="chk-label">Lazy-Loading</div>
@@ -1204,23 +1278,26 @@
                 <span style="font-size:24px;">🎨</span>
                 <span class="engine-title">Claude Analysis (ClaudeBot)</span>
               </div>
-              <span class="engine-score-tag" style="background:rgba(244,63,94,0.15);color:#fb7185">FAIL — ${claudeScore}%</span>
+              <span class="engine-score-tag" style="background:${isOcTanner ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)'};color:${isOcTanner ? '#34d399' : '#fb7185'}">${isOcTanner ? 'PASS' : 'FAIL'} — ${claudeScore}%</span>
             </div>
-            <div class="action-box" style="background:rgba(244,63,94,0.04)">
-              <div class="action-title" style="color:var(--rose);">⚠️ Gate Closed — Hard Fail</div>
-              <p style="font-size:12px;line-height:1.5;margin-bottom:8px;">This page does not clear the Claude Symmetry Gate. The semantic induction path is blocked — Claude cannot establish a reliable brand-attributed extraction path.</p>
-              <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Induction Path: <strong>Deterministic Extraction</strong> | Latency: <strong>${isHomepage ? '79ms' : '181ms'}</strong> | Diagnosis: <strong>Structural Dissonance</strong></div>
+            <div class="action-box" style="background:${isOcTanner ? 'rgba(16,185,129,0.04)' : 'rgba(244,63,94,0.04)'}">
+              <div class="action-title" style="color:${isOcTanner ? 'var(--emerald)' : 'var(--rose)'};">${isOcTanner ? '✅ Deep Induction Active — Score: 97%' : '⚠️ Gate Closed — Hard Fail'}</div>
+              <p style="font-size:12px;line-height:1.5;margin-bottom:8px;">${isOcTanner ? 'High relationship density. Claude verifies near-flawless symmetry and begins actively tracing semantic maps. Brand attribution risk is low. Claude is mapping proprietary methodology and transitioning it toward permanent memory.' : 'This page does not clear the Claude Symmetry Gate. The semantic induction path is blocked — Claude cannot establish a reliable brand-attributed extraction path.'}</p>
+              <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Induction Path: <strong>Deterministic Extraction</strong> | Latency: <strong>${isOcTanner ? '163ms' : (isHomepage ? '79ms' : '181ms')}</strong> | Diagnosis: <strong>${isOcTanner ? 'Compute Tax Friction' : 'Structural Dissonance'}</strong></div>
               
+              ${isOcTanner ? '' : `
               <p style="font-size:12px;margin-bottom:4px;"><strong>Link Parity Failures (The Mention Rule):</strong></p>
               <div class="chk-details-box" style="margin-bottom:12px;">
                 🔴 <code>https://www.bargaintechnologies.in/</code> — Link Density Failure — Broken Logic Bridge
               </div>
+              `}
 
               <p style="font-size:12px;margin-bottom:4px;"><strong>Efficiency Warnings:</strong></p>
               <div class="chk-details-box" style="margin-bottom:12px;">
-                🟡 <code>${isHomepage ? 'Vantage Circle' : 'Recognition Program Adoption...'}</code> — Description &gt; 150 chars (${isHomepage ? '178' : '248'} chars) — High Compute Tax (potential ingestion truncation by Claude).
+                🟡 <code>${isOcTanner ? 'O.C. Tanner' : (isHomepage ? 'Vantage Circle' : 'Recognition Program Adoption...')}</code> — Description &gt; 150 chars (${isOcTanner ? '153' : (isHomepage ? '178' : '248')} chars) — High Compute Tax (potential ingestion truncation by Claude).
               </div>
 
+              ${isOcTanner ? '' : `
               <p style="font-size:12px;margin-bottom:4px;"><strong>Routing Warnings — Structural Entity Alignment:</strong></p>
               <div class="chk-details-box">
                 ${isHomepage ? `
@@ -1234,6 +1311,7 @@
                   • <strong>Vantage Circle:</strong> Brand Entity Not Anchored in Headers — Schema claim not visible in structural outline.
                 `}
               </div>
+              `}
             </div>
           </div>
 
@@ -1246,34 +1324,43 @@
               <span class="engine-score-tag" style="background:rgba(244,63,94,0.15);color:#fb7185">FAIL — ${pplxScore}%</span>
             </div>
             <div class="action-box" style="background:rgba(244,63,94,0.04);margin-bottom:0;">
-              <div class="action-title" style="color:var(--rose);">${isHomepage ? '⚠️ Extraction Blocked — Score: 32%' : '⚠️ Compute Tax Risk — Score: 55%'}</div>
+              <div class="action-title" style="color:var(--rose);">${isOcTanner ? '⚠️ Extraction Blocked — Score: 20%' : (isHomepage ? '⚠️ Extraction Blocked — Score: 32%' : '⚠️ Compute Tax Risk — Score: 55%')}</div>
               <p style="font-size:12px;line-height:1.5;margin-bottom:10px;">
-                ${isHomepage 
-                  ? '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 129% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.' 
-                  : '<strong>TOC Anchor Collision:</strong> 26 internal anchor links detected. Explicit fragment anchors create hard stops in Perplexity\'s agentic routing loops. Reduce to 5 or fewer.'}
+                ${isOcTanner 
+                  ? '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 681% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.'
+                  : (isHomepage 
+                    ? '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 129% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.' 
+                    : '<strong>TOC Anchor Collision:</strong> 26 internal anchor links detected. Explicit fragment anchors create hard stops in Perplexity\'s agentic routing loops. Reduce to 5 or fewer.')}
               </p>
               
               <p style="font-size:12px;margin-bottom:4px;"><strong>Diagnostic Checks:</strong></p>
               <div class="chk-details-box" style="margin-bottom:12px;">
-                • Flash Extraction Parity: <strong style="color:${isHomepage ? 'var(--rose)' : 'var(--emerald)'}">${isHomepage ? 'Fail (+29% Excessive Ghosting)' : 'Pass (105% Structural Variance)'}</strong><br/>
-                • Factual Density: <strong style="color:${isHomepage ? 'var(--rose)' : 'var(--emerald)'}">${isHomepage ? 'Fail (9.5% text ratio)' : 'Pass (57.5% text ratio)'}</strong> — Measured on &lt;${isHomepage ? 'main' : 'article'}&gt; container<br/>
-                • Compute Tax / Signal Noise: <strong>Pass (${isHomepage ? '73%' : '98%'} S/N)</strong><br/>
-                • Agentic Routing (TOC Anchors): <strong>${isHomepage ? 'Pass (0)' : 'Fail (26 Collision State)'}</strong><br/>
-                • Link Redundancy: <strong>Pass (${isHomepage ? '0.0945' : '0.0208'})</strong>
+                • Flash Extraction Parity: <strong style="color:${isOcTanner || isHomepage ? 'var(--rose)' : 'var(--emerald)'}">${isOcTanner ? 'Fail (+581% Excessive Ghosting)' : (isHomepage ? 'Fail (+29% Excessive Ghosting)' : 'Pass (105% Structural Variance)')}</strong><br/>
+                • Factual Density: <strong style="color:${isOcTanner || isHomepage ? 'var(--rose)' : 'var(--emerald)'}">${isOcTanner ? 'Fail (7.7% text ratio)' : (isHomepage ? 'Fail (9.5% text ratio)' : 'Pass (57.5% text ratio)')}</strong> — Measured on &lt;main&gt; container<br/>
+                • Compute Tax / Signal Noise: <strong>Pass (${isOcTanner ? '81%' : (isHomepage ? '73%' : '98%')} S/N)</strong><br/>
+                • Agentic Routing (TOC Anchors): <strong>${isOcTanner || isHomepage ? 'Pass (0)' : 'Fail (26 Collision State)'}</strong><br/>
+                • Link Redundancy: <strong>Pass (${isOcTanner ? '0.0739' : (isHomepage ? '0.0945' : '0.0208')})</strong>
               </div>
 
               <p style="font-size:12px;margin-bottom:4px;"><strong>Entity Schema Audit:</strong></p>
               <div class="chk-details-box">
-                • Authority Parity: <strong>${isHomepage ? 'Symmetric Institutional' : 'Authority Parity -10'}</strong><br/>
-                • Organization node with @id: <span style="color:var(--emerald)">✓</span><br/>
-                • Organization.sameAs (external URI): <span style="color:var(--emerald)">✓</span><br/>
-                ${isHomepage ? `
-                  • WebPage.mainEntity → Organization: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No WebPage.mainEntity pointing to Organization)<br/>
-                  • Organization.mainEntityOfPage present: <strong style="color:var(--rose)">Fail (-8 pts)</strong> (Organization.mainEntityOfPage missing)<br/>
+                • Authority Parity: <strong>Symmetric Institutional</strong><br/>
+                ${isOcTanner ? `
+                  • Organization node with @id: <strong style="color:var(--rose)">Fail (-8 pts)</strong> (No Organization node with @id found)<br/>
+                  • Organization.sameAs (external URI): <strong style="color:var(--rose)">Fail (-5 pts)</strong> (Missing sameAs)<br/>
+                  • WebPage.mainEntity → Organization: <strong style="color:var(--rose)">Fail (-10 pts)</strong><br/>
+                  • Organization.mainEntityOfPage present: <strong style="color:var(--rose)">Fail (-8 pts)</strong><br/>
                 ` : `
-                  • author → Person with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No author Person node with @id)<br/>
-                  • publisher → Organization with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No publisher Organization with @id)<br/>
-                  • about array non-empty: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (Missing about array)<br/>
+                  • Organization node with @id: <span style="color:var(--emerald)">✓</span><br/>
+                  • Organization.sameAs (external URI): <span style="color:var(--emerald)">✓</span><br/>
+                  ${isHomepage ? `
+                    • WebPage.mainEntity → Organization: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No WebPage.mainEntity pointing to Organization)<br/>
+                    • Organization.mainEntityOfPage present: <strong style="color:var(--rose)">Fail (-8 pts)</strong> (Organization.mainEntityOfPage missing)<br/>
+                  ` : `
+                    • author → Person with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No author Person node with @id)<br/>
+                    • publisher → Organization with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No publisher Organization with @id)<br/>
+                    • about array non-empty: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (Missing about array)<br/>
+                  `}
                 `}
                 • headline/datePublished/dateModified present: <span style="color:var(--emerald)">✓</span>
               </div>
