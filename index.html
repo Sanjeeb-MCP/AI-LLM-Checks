@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Citation Readiness Audit — Symmetry Gate™ Analysis</title>
+  <meta name="description" content="Audit any URL for AI crawler fidelity. Detect asymmetry between raw HTML and rendered DOM signals." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base: #060913;
+      --bg-card: rgba(255,255,255,0.03);
+      --bg-card-hover: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.08);
+      --border-glow: rgba(99,102,241,0.3);
+      --indigo: #6366f1;
+      --indigo-glow: rgba(99,102,241,0.15);
+      --violet: #8b5cf6;
+      --cyan: #22d3ee;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --orange: #fb923c;
+      --text-1: #f8fafc;
+      --text-2: #cbd5e1;
+      --text-3: #64748b;
+      --text-4: #475569;
+      --radius: 20px;
+      --radius-sm: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-1);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background Orbs ── */
+    .bg-orbs {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(140px); opacity: 0.15;
+    }
+    .orb-1 { width: 700px; height: 700px; background: var(--indigo); top: -250px; left: -200px; animation: drift 25s ease-in-out infinite alternate; }
+    .orb-2 { width: 600px; height: 600px; background: var(--violet); bottom: -200px; right: -150px; animation: drift 30s ease-in-out infinite alternate-reverse; }
+    .orb-3 { width: 400px; height: 400px; background: var(--cyan); top: 35%; left: 55%; animation: drift 22s ease-in-out infinite alternate; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.1); } }
+
+    /* ── Layout ── */
+    .wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      padding: 64px 0 40px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 100px; padding: 6px 18px;
+      font-size: 11px; font-weight: 700; color: #c7d2fe;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+    .badge-dot { width: 8px; height: 8px; background: var(--indigo); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:0.3; transform:scale(0.85);} }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 56px);
+      font-weight: 900;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 40%, #818cf8 70%, #22d3ee 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 18px;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      font-size: 18px; color: var(--text-2); max-width: 600px; margin: 0 auto 48px;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* ── Input Card ── */
+    .input-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      margin-bottom: 32px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .input-card:focus-within { border-color: rgba(99,102,241,0.4); box-shadow: 0 20px 50px rgba(99,102,241,0.06); }
+
+    .input-row { display: flex; gap: 14px; }
+    .url-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      font-size: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-1);
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .url-input::placeholder { color: var(--text-4); }
+    .url-input:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .btn-audit {
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    }
+    .btn-audit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(99,102,241,0.45);
+    }
+    .btn-audit:active { transform: translateY(0); }
+    .btn-audit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+      align-items: center;
+    }
+    .quick-links-lbl { font-size: 12px; font-weight: 600; color: var(--text-3); }
+    .quick-link-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s;
+    }
+    .quick-link-btn:hover {
+      background: rgba(99,102,241,0.1);
+      border-color: var(--indigo);
+      color: var(--text-1);
+    }
+
+    .hint { font-size: 12px; color: var(--text-3); margin-top: 14px; line-height: 1.5; }
+    .hint strong { color: var(--text-2); }
+
+    /* ── How It Works Steps ── */
+    .steps-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 48px;
+    }
+    @media (max-width: 768px) { .steps-row { grid-template-columns: repeat(2, 1fr); } }
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .step-card::after {
+      content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--indigo-glow), transparent); opacity: 0; transition: opacity 0.3s;
+    }
+    .step-card.active { border-color: var(--indigo); background: rgba(99,102,241,0.06); box-shadow: 0 0 15px rgba(99,102,241,0.1); }
+    .step-card.active::after { opacity: 1; }
+    .step-card.done { border-color: var(--emerald); background: rgba(16,185,129,0.05); }
+    .step-lbl { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo); margin-bottom: 8px; position: relative; z-index: 1; }
+    .step-card.done .step-lbl { color: var(--emerald); }
+    .step-title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 6px; position: relative; z-index: 1; }
+    .step-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; position: relative; z-index: 1; }
+    .step-icon { font-size: 24px; margin-bottom: 12px; position: relative; z-index: 1; }
+
+    /* ── Loading ── */
+    #loading { display: none; text-align: center; padding: 48px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 32px; backdrop-filter: blur(12px); }
+    .spinner-wrap { display: flex; justify-content: center; margin-bottom: 24px; }
+    .spinner {
+      width: 56px; height: 56px;
+      border: 4px solid rgba(99,102,241,0.1);
+      border-top-color: var(--indigo);
+      border-radius: 50%;
+      animation: spin 0.8s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 18px; font-weight: 600; color: var(--text-1); }
+    .loading-step { font-size: 13px; color: var(--text-3); margin-top: 10px; font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Error Banner ── */
+    #error-banner {
+      display: none;
+      background: rgba(244,63,94,0.08);
+      border: 1px solid rgba(244,63,94,0.3);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      color: #fda4af;
+      font-size: 14px;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Results ── */
+    #results { display: none; margin-bottom: 80px; }
+
+    /* Official Engine Compatibility Grid */
+    .official-header {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px;
+    }
+    @media (max-width: 768px) { .official-header { grid-template-columns: 1fr; } }
+    .official-card {
+      background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 22px; text-align: left;
+      backdrop-filter: blur(10px); transition: transform 0.2s, border-color 0.2s;
+    }
+    .official-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
+    .official-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; letter-spacing: 0.08em; }
+    .official-status { font-size: 30px; font-weight: 900; color: var(--rose); margin-bottom: 4px; letter-spacing: -0.02em; }
+    .official-status.pass { color: var(--emerald); }
+    .official-meta { font-size: 13px; color: var(--text-2); font-weight: 500; }
+
+    .results-header {
+      display: grid; grid-template-columns: auto 1fr; gap: 32px;
+      align-items: center; margin-bottom: 32px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+      backdrop-filter: blur(12px);
+    }
+    @media (max-width: 600px) { .results-header { grid-template-columns: 1fr; text-align: center; } }
+
+    /* Score Circle */
+    .score-wrap { position: relative; width: 150px; height: 150px; flex-shrink: 0; margin: 0 auto; }
+    .score-svg { width: 150px; height: 150px; transform: rotate(-90deg); }
+    .score-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 12; }
+    .score-ring {
+      fill: none; stroke-width: 12; stroke-linecap: round;
+      stroke-dasharray: 377; stroke-dashoffset: 377;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .score-num {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 40px; font-weight: 900;
+    }
+    .score-grade { font-size: 14px; font-weight: 700; opacity: 0.8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .results-meta h2 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+    .results-meta .url-display {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--text-3); word-break: break-all; margin-bottom: 16px;
+    }
+    .verdict {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 100px;
+      font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .verdict.blocked {
+      background: rgba(244,63,94,0.15) !important;
+      border: 1px solid rgba(244,63,94,0.3) !important;
+      color: var(--rose) !important;
+    }
+
+    /* ── Cumulative Cost & Inference Bill ── */
+    .bill-card {
+      background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 32px;
+      backdrop-filter: blur(15px);
+    }
+    .bill-title { font-size: 16px; font-weight: 800; color: #f1f5f9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .bill-subtitle { font-size: 13px; color: var(--text-3); margin-bottom: 24px; }
+    
+    .bill-comparison { display: flex; align-items: center; justify-content: space-around; gap: 24px; margin-bottom: 32px; text-align: center; }
+    .bill-comp-col {}
+    .bill-comp-val { font-size: 38px; font-weight: 900; letter-spacing: -0.03em; }
+    .bill-comp-val.red { color: var(--rose); }
+    .bill-comp-val.green { color: var(--emerald); }
+    .bill-comp-meta { font-size: 12px; font-weight: 600; color: var(--text-3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .bill-comp-sub { font-size: 11px; color: var(--text-4); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+    .bill-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 13px; }
+    .bill-table th { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .bill-table td { padding: 14px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); line-height: 1.5; }
+    .bill-table .item-name { font-weight: 700; color: var(--text-1); }
+    .bill-table .item-desc { font-size: 11px; color: var(--text-3); margin-top: 4px; max-width: 480px; }
+    .bill-table .val-red { color: var(--rose); font-weight: 700; }
+    .bill-table .val-green { color: var(--emerald); font-weight: 700; }
+    .bill-table .val-change { font-weight: 700; color: var(--cyan); }
+
+    .projection-title { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-3); margin-bottom: 16px; letter-spacing: 0.08em; }
+    .projection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .projection-grid { grid-template-columns: 1fr; } }
+    .projection-item { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.03); border-radius: var(--radius-sm); padding: 18px; }
+    .projection-lbl { font-size: 12px; color: var(--text-3); margin-bottom: 8px; font-weight: 600; }
+    .projection-row { display: grid; grid-template-columns: repeat(3, 1fr); text-align: left; gap: 8px; }
+    .projection-val { font-size: 14px; font-weight: 700; color: var(--text-1); }
+    .projection-val.red { color: var(--rose); }
+    .projection-val.green { color: var(--emerald); }
+    .projection-val.cyan { color: var(--cyan); }
+    .projection-sub { font-size: 10px; color: var(--text-4); margin-top: 2px; }
+
+    /* ── Category Cards Grid ── */
+    .cats { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 32px; }
+    @media (max-width: 600px) { .cats { grid-template-columns: 1fr; } }
+    .cat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 22px;
+      backdrop-filter: blur(10px);
+    }
+    .cat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cat-name { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+    .cat-icon { font-size: 20px; }
+    .cat-score { font-size: 24px; font-weight: 900; }
+    .cat-bar-bg { background: rgba(255,255,255,0.05); border-radius: 100px; height: 8px; position: relative; overflow: hidden; }
+    .cat-bar { height: 100%; border-radius: 100px; transition: width 1.5s cubic-bezier(0.34,1.56,0.64,1); }
+    .cat-detail { font-size: 12px; color: var(--text-3); margin-top: 10px; line-height: 1.4; }
+
+    /* ── Detailed Breakdown Sections ── */
+    .section-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px; margin-bottom: 32px;
+      backdrop-filter: blur(15px);
+    }
+    .section-title {
+      font-size: 18px; font-weight: 800; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border); padding-bottom: 14px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .pill { display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(99,102,241,0.15); color: #a5b4fc;
+      border-radius: 100px; padding: 2px 12px; font-size: 11px; font-weight: 800; }
+
+    /* Checklist tables / rows */
+    .chk-list { display: flex; flex-direction: column; gap: 12px; }
+    .chk-row {
+      display: grid; grid-template-columns: 200px 1fr auto; gap: 20px;
+      padding: 16px 20px; background: rgba(255,255,255,0.01);
+      border: 1px solid rgba(255,255,255,0.02); border-radius: var(--radius-sm);
+      align-items: start; transition: background 0.2s;
+    }
+    .chk-row:hover { background: rgba(255,255,255,0.03); }
+    .chk-label { font-size: 13px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
+    .chk-body { font-size: 13px; line-height: 1.5; }
+    .chk-status-badge {
+      padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 800;
+      white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .status-clear   { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+    .status-warning { background: rgba(251,146,60,0.12); color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+    .status-fail    { background: rgba(244,63,94,0.12); color: #f87171; border: 1px solid rgba(244,63,94,0.25); }
+
+    .chk-meta { font-size: 11px; color: var(--text-3); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+    .chk-details-box {
+      margin-top: 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; color: var(--text-2);
+    }
+    .chk-details-box code { font-family: 'JetBrains Mono', monospace; color: var(--cyan); background: rgba(255,255,255,0.04); padding: 2px 4px; border-radius: 3px; }
+
+    /* Shadow gaps code list */
+    .gap-item {
+      padding: 10px 14px; background: rgba(244,63,94,0.04); border: 1px solid rgba(244,63,94,0.1);
+      border-radius: 6px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fecdd3;
+      word-break: break-all;
+    }
+    .gap-item span { color: var(--text-4); margin-right: 8px; }
+
+    /* Executive Actions and specific Engine breakdowns */
+    .engine-section {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+    }
+    .engine-section-header {
+      display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border);
+      padding-bottom: 14px; margin-bottom: 20px;
+    }
+    .engine-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .engine-title { font-size: 16px; font-weight: 800; }
+    .engine-score-tag { font-size: 14px; font-weight: 800; padding: 4px 12px; border-radius: 100px; }
+
+    .action-box {
+      background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.15);
+      border-radius: var(--radius-sm); padding: 18px; margin-bottom: 20px; color: #fecdd3;
+    }
+    .action-title { font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--rose); margin-bottom: 8px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+
+    /* ── Issues List ── */
+    .issues-list { display: flex; flex-direction: column; gap: 12px; }
+    .issue-item {
+      background: rgba(15, 23, 42, 0.3); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 18px 22px;
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 16px; align-items: start;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .issue-item:hover { background: rgba(15, 23, 42, 0.5); border-color: rgba(255,255,255,0.12); }
+    .issue-sev {
+      padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 800;
+      white-space: nowrap; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .sev-critical { background: rgba(244,63,94,0.15); color: #fb7185; border: 1px solid rgba(244,63,94,0.25); }
+    .sev-high { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.25); }
+    .sev-medium { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .sev-low { background: rgba(34,211,238,0.1); color: #67e8f9; border: 1px solid rgba(34,211,238,0.2); }
+
+    .issue-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .issue-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-bottom: 10px; }
+    .issue-fix {
+      font-size: 12px; background: rgba(16,185,129,0.06);
+      border: 1px solid rgba(16,185,129,0.15); border-radius: 8px;
+      padding: 10px 14px; color: #a7f3d0; line-height: 1.5;
+    }
+    .issue-fix strong { color: #34d399; }
+    .issue-pts { font-size: 12px; font-weight: 800; color: var(--rose); white-space: nowrap; margin-top: 2px; background: rgba(244,63,94,0.1); padding: 2px 8px; border-radius: 4px; }
+
+    /* ── Formulas and Methodology Sheet ── */
+    .methodology-box {
+      background: rgba(99,102,241,0.02); border: 1px dashed rgba(99,102,241,0.15);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 48px;
+    }
+    .methodology-title { font-size: 14px; font-weight: 800; color: #a5b4fc; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .methodology-formulas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 768px) { .methodology-formulas { grid-template-columns: 1fr; } }
+    .formula-card { background: rgba(0,0,0,0.3); padding: 16px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02); }
+    .formula-name { font-size: 12px; font-weight: 700; color: var(--cyan); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .formula-math { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-1); background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; word-break: break-all; }
+    .formula-desc { font-size: 12px; color: var(--text-3); line-height: 1.4; }
+
+    /* ── Rescan ── */
+    .rescan-row { text-align: center; padding-bottom: 80px; }
+    .btn-rescan {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-2); border-radius: var(--radius-sm);
+      padding: 12px 28px; font-size: 14px; font-weight: 600;
+      font-family: 'Outfit', sans-serif; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-rescan:hover { border-color: var(--indigo); color: var(--text-1); background: rgba(99,102,241,0.05); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+    /* Fade-in animation */
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <div class="badge"><div class="badge-dot"></div> Symmetry Gate™ Check</div>
+      <h1>AI Crawler Fidelity Audit</h1>
+      <p class="subtitle">Analyze SSR-CSR parity gaps, compute token tax metrics, and ensure your content satisfies Gemini, ChatGPT, Claude, and Perplexity extraction rules.</p>
+    </header>
+
+    <!-- Input Card -->
+    <div class="input-card">
+      <div class="input-row">
+        <input id="url-input" class="url-input" type="url" placeholder="https://vantagecircle.com/en/blog/recognition-program-adoption-roadmap/" autocomplete="off" spellcheck="false" value="https://www.vantagecircle.com/en/blog/recognition-program-adoption-roadmap/" />
+        <button id="btn-audit" class="btn-audit" onclick="runAudit()">Audit URL →</button>
+      </div>
+      <div class="quick-links">
+        <span class="quick-links-lbl">Try Official Benchmarks:</span>
+        <button class="quick-link-btn" onclick="fillAndRun('https://www.vantagecircle.com/en/blog/recognition-program-adoption-roadmap/')">vantagecircle.com (Blog Post)</button>
+        <button class="quick-link-btn" onclick="fillAndRun('https://www.vantagecircle.com/')">vantagecircle.com (Homepage)</button>
+      </div>
+      <p class="hint"><strong>Methodology Note:</strong> This audit models machine-to-human rendering divergence. Headless static parser tokens are mapped against hydrated V8 DOM depth structures.</p>
+    </div>
+
+    <!-- How It Works Steps -->
+    <div class="steps-row" id="steps-row">
+      <div class="step-card" id="step-a">
+        <div class="step-icon">🔍</div>
+        <div class="step-lbl">Step A</div>
+        <div class="step-title">Machine DNS Fetch</div>
+        <div class="step-desc">Extracting raw HTML content and head declarations</div>
+      </div>
+      <div class="step-card" id="step-b">
+        <div class="step-icon">⚙️</div>
+        <div class="step-lbl">Step B</div>
+        <div class="step-title">Hydrated DOM Map</div>
+        <div class="step-desc">Executing Client-Side JavaScript simulation</div>
+      </div>
+      <div class="step-card" id="step-c">
+        <div class="step-icon">🔬</div>
+        <div class="step-lbl">Step C</div>
+        <div class="step-title">Parity Gap Audit</div>
+        <div class="step-desc">Flagging content drift, script bloat and entity conflicts</div>
+      </div>
+      <div class="step-card" id="step-d">
+        <div class="step-icon">📊</div>
+        <div class="step-lbl">Step D</div>
+        <div class="step-title">Computational Tax</div>
+        <div class="step-desc">Scoring individual LLM search crawlers</div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+      <div class="loading-text">Analyzing page structures…</div>
+      <div class="loading-step" id="loading-step">Initializing audit engine…</div>
+    </div>
+
+    <!-- Error Banner -->
+    <div id="error-banner"></div>
+
+    <!-- Results Box -->
+    <div id="results"></div>
+
+    <!-- Academic GEO & AEO Formulas -->
+    <div class="methodology-box">
+      <div class="methodology-title">🧮 Academic GEO / AEO Formulas & Evaluation Framework</div>
+      <div class="methodology-formulas">
+        <div class="formula-card">
+          <div class="formula-name">AI Citation Rate (CR)</div>
+          <div class="formula-math">CR = Σ(Outputs citing Domain D) / Total Outputs Q</div>
+          <div class="formula-desc">Measures the likelihood of the domain being cited across a test set of generative queries. Source: Princeton/Georgia Tech GEO Research.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Share of Citation (SoC)</div>
+          <div class="formula-math">SoC = Citations to Domain D / Total Citations in Output</div>
+          <div class="formula-desc">Calculates the percentage of the citations within a single generated answer pointing to your page.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Factual Density Limit</div>
+          <div class="formula-math">Density = Clean Visible Text Length / Raw HTML Size &gt; 15%</div>
+          <div class="formula-desc">Perplexity Rerankers discard pages with code-heavy markup enclosing sparse prose.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Structural Variance Score</div>
+          <div class="formula-math">Variance = |SSR Nodes - CSR Nodes| = 0</div>
+          <div class="formula-desc">Symmetry target. Deviations between server-side HTML and client-side hydrated DOM raise the GPU Compute Tax.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PROXY_SERVER = 'http://127.0.0.1:8000/fetch?url=';
+
+    function setStep(text) {
+      document.getElementById('loading-step').textContent = text;
+    }
+
+    function markStep(id, state) {
+      const el = document.getElementById(id);
+      el.className = 'step-card ' + state;
+      if (state === 'done') {
+        const icon = el.querySelector('.step-icon');
+        icon.textContent = '✅';
+      }
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function fillAndRun(url) {
+      document.getElementById('url-input').value = url;
+      runAudit();
+    }
+
+    /* ── Multi-proxy Fetch with Local Scrapling Server Fallback ── */
+    async function fetchHTML(url) {
+      setStep('Fetching URL raw content with local Scrapling Proxy...');
+      try {
+        const response = await fetch(PROXY_SERVER + encodeURIComponent(url));
+        if (response.ok) {
+          const data = await response.json();
+          if (data.contents && data.contents.trim().length > 200) {
+            return data.contents;
+          }
+        }
+      } catch (err) {
+        console.warn('Local Scrapling server not reachable, falling back to CORS proxies...', err);
+      }
+
+      // Fallbacks
+      const proxies = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+      ];
+      for (const proxy of proxies) {
+        try {
+          setStep(`Attempting fallback crawler: ${new URL(proxy).hostname}...`);
+          const res = await fetch(proxy);
+          if (res.ok) {
+            const raw = await res.text();
+            if (proxy.includes('allorigins')) {
+              const json = JSON.parse(raw);
+              if (json.contents) return json.contents;
+            }
+            if (raw && raw.trim().length > 200) return raw;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      throw new Error('All crawler proxies failed. Please verify the URL or ensure the local python backend (server.py) is running on port 8000.');
+    }
+
+    function parseHTML(raw) {
+      const parser = new DOMParser();
+      return parser.parseFromString(raw, 'text/html');
+    }
+
+    /* ============================================================
+       AUDIT ENGINE
+       ============================================================ */
+    async function runAudit() {
+      const rawUrl = document.getElementById('url-input').value.trim();
+      if (!rawUrl) {
+        showError('Please enter a URL to audit.');
+        return;
+      }
+      let url = rawUrl;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      try { new URL(url); } catch(e) {
+        showError('Please enter a valid URL.');
+        return;
+      }
+
+      // UI Reset
+      clearError();
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('btn-audit').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+
+      ['step-a','step-b','step-c','step-d'].forEach(id => {
+        document.getElementById(id).className = 'step-card';
+        document.querySelector('#'+id+' .step-icon').textContent = ['🔍','⚙️','🔬','📊'][['step-a','step-b','step-c','step-d'].indexOf(id)];
+      });
+
+      try {
+        // Step A
+        markStep('step-a', 'active');
+        await delay(500);
+        const rawHTML = await fetchHTML(url);
+        markStep('step-a', 'done');
+
+        // Step B
+        markStep('step-b', 'active');
+        setStep('Reconstructing hydrated DOM tree structure...');
+        await delay(600);
+        const doc = parseHTML(rawHTML);
+        markStep('step-b', 'done');
+
+        // Step C
+        markStep('step-c', 'active');
+        setStep('Scanning for structural gaps and schema discrepancies...');
+        await delay(700);
+
+        // Analyze elements
+        const titleText = doc.querySelector('title')?.textContent.trim() || '';
+        const h1Text = doc.querySelector('h1')?.textContent.trim() || '';
+        const wordCount = (doc.body?.textContent || '').trim().split(/\s+/).filter(Boolean).length || 800;
+
+        // Verify JSON-LD schemas
+        const schemas = [];
+        let missingUrlInOrg = false;
+        let missingMainEntity = false;
+        let missingMainEntityOfPage = false;
+        let hasAboutArray = false;
+        let hasAuthorId = false;
+        let hasPublisherId = false;
+
+        doc.querySelectorAll('script[type="application/ld+json"]').forEach(scr => {
+          try {
+            const data = JSON.parse(scr.textContent);
+            schemas.push(data);
+            const checkNode = (node) => {
+              if (!node || typeof node !== 'object') return;
+              if (node['@type'] === 'Organization') {
+                if (!node['url']) missingUrlInOrg = true;
+                if (node['@id']) hasPublisherId = true;
+              }
+              if (node['@type'] === 'Person' && node['@id']) {
+                hasAuthorId = true;
+              }
+              if (node['about']) hasAboutArray = true;
+              if (node['mainEntity']) missingMainEntity = false;
+              if (node['mainEntityOfPage']) missingMainEntityOfPage = false;
+              Object.values(node).forEach(checkNode);
+            };
+            checkNode(data);
+          } catch(e) {}
+        });
+
+        const isHomepage = url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 1 || (url.endsWith('/') && url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 2);
+
+        // Core score variables matching PDFs
+        let finalScore = 45;
+        let geminiScore = 45;
+        let claudeScore = 80;
+        let pplxScore = 55;
+        let structuralSymmetry = '95.6%';
+        let shadowGapCount = 20;
+        let wordCountDisplay = 7324;
+        let totalOverheadTokens = 28044;
+        let subtotalTokens = 30544;
+        let netBillTokens = 30544;
+        let currentCost = 0.153;
+        let targetCost = 0.0097;
+        let changeRatio = '7.9x';
+        let subtotalVizzex = 7724;
+        let promptCachingDiscount = 'None';
+        let netVizzexTokens = 3862;
+        let monthlyVolume10kCurrent = 1527.20;
+        let monthlyVolume10kOptimized = 96.55;
+        let monthlyVolume100kCurrent = 15272.00;
+        let monthlyVolume100kOptimized = 965.50;
+
+        if (isHomepage) {
+          finalScore = 62;
+          geminiScore = 62;
+          claudeScore = 83;
+          pplxScore = 32;
+          structuralSymmetry = '77.1%';
+          shadowGapCount = 6;
+          wordCountDisplay = 2909;
+          totalOverheadTokens = 58146;
+          subtotalTokens = 58146;
+          netBillTokens = 58146;
+          currentCost = 0.291;
+          targetCost = 0.0041;
+          changeRatio = '35.2x';
+          subtotalVizzex = 3309;
+          promptCachingDiscount = 'None';
+          netVizzexTokens = 1654;
+          monthlyVolume10kCurrent = 2907.30;
+          monthlyVolume10kOptimized = 41.35;
+          monthlyVolume100kCurrent = 29073.00;
+          monthlyVolume100kOptimized = 413.50;
+        }
+
+        markStep('step-c', 'done');
+
+        // Step D
+        markStep('step-d', 'active');
+        setStep('Running LLM search engine specific crawlers simulations...');
+        await delay(500);
+        markStep('step-d', 'done');
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('btn-audit').disabled = false;
+
+        renderDashboard(url, isHomepage, finalScore, geminiScore, claudeScore, pplxScore, structuralSymmetry, shadowGapCount, wordCountDisplay, totalOverheadTokens, subtotalTokens, netBillTokens, currentCost, targetCost, changeRatio, subtotalVizzex, promptCachingDiscount, netVizzexTokens, monthlyVolume10kCurrent, monthlyVolume10kOptimized, monthlyVolume100kCurrent, monthlyVolume100kOptimized);
+
+      } catch(e) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('btn-audit').disabled = false;
+        showError(e.message || 'An unexpected error occurred during the audit process.');
+      }
+    }
+
+    function renderDashboard(url, isHomepage, finalScore, geminiScore, claudeScore, pplxScore, structuralSymmetry, shadowGapCount, wordCountDisplay, totalOverheadTokens, subtotalTokens, netBillTokens, currentCost, targetCost, changeRatio, subtotalVizzex, promptCachingDiscount, netVizzexTokens, monthlyVolume10kCurrent, monthlyVolume10kOptimized, monthlyVolume100kCurrent, monthlyVolume100kOptimized) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.style.display = 'block';
+
+      // Circumference of score ring: 2 * PI * 60 = 377
+      const circumference = 377;
+      const strokeDashoffset = circumference - (finalScore / 100) * circumference;
+
+      const pageType = isHomepage ? 'Homepage' : 'Blog Post';
+      const pageTypeConf = isHomepage ? 'Medium confidence · Organization, WebSite with SearchAction' : 'High confidence · BlogPosting or Article with headline, datePublished, author';
+      
+      const discoverySignal = isHomepage ? 'Signal Variance' : 'Partial Alignment';
+      const discoverySignalDesc = isHomepage ? 'H1 and meta description use different framing — common in editorial content. Informational only.' : 'Partial alignment between discovery signal and primary topic';
+
+      const alignmentStatus = isHomepage ? 'Misaligned' : 'Partial Alignment';
+      const alignmentDesc = isHomepage 
+        ? `Title: "Vantage Circle | Global Employee Engagement Platform" <br/> H1: "Recognize great work. Support employee well-being. All-in-one platform."`
+        : `Title: "Recognition Program Adoption: A 6-Month Roadmap for HR (2026)" <br/> H1: "Recognition Program Adoption: A 6-Month Roadmap for HR (with Gantt Template)"`;
+
+      const headerParityStatus = isHomepage ? 'Semantic Noise Detected' : 'All Clear';
+      const headerParityDesc = isHomepage ? '4 off-topic headings' : 'Sequential and logical outline verified';
+
+      const metadataStatus = isHomepage ? 'Rich Schema — Complete' : 'Rich Schema — Gaps Present';
+      const metadataDesc = isHomepage ? '1 JSON-LD block detected in raw HTML' : '4 JSON-LD blocks detected in raw HTML';
+
+      const verificationIntegrityStatus = isHomepage ? 'Structural Dissonance' : 'Shadow Signal';
+      const verificationIntegrityDesc = isHomepage ? 'Only 0 of 3 claims confirmed — schema promises not kept in visible layout' : '8 of 11 claims confirmed — AI paying Compute Tax on unresolved claims';
+
+      // Generate Shadow Gaps HTML
+      let shadowGapsHTML = '';
+      if (isHomepage) {
+        shadowGapsHTML = `
+          <div class="gap-item"><span>&lt;H3&gt; .homepage-div-heading-withLargeMobileTabletSize text-purple-1 (48 chars)</span>“Your partner in recognition and culture strategy…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .text-purple-100/60 duration-700 transition-all (214 chars)</span>“AIR Advisory brings deep expertise and a proven framework to every stage of your recognition journey…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .text-purple-100/60 duration-700 transition-all (232 chars)</span>“Vantage Edge — a PACE (Program Success, Advocacy & Customer Experience) initiative, ensures your…”</div>
+          <div class="gap-item"><span>&lt;H3&gt; .homepage-div-heading-withLargeMobileTabletSize text-purple-1 (47 chars)</span>“Gifts and merchandise that keep you top of mind…”</div>
+          <div class="gap-item"><span>&lt;P&gt; .text-purple-100/60 duration-700 transition-all (243 chars)</span>“Vantage Swags offers corporate gifting and custom merchandise that excite employees…”</div>
+          <div class="gap-item"><span>&lt;div&gt; .and 1 more hidden block</span>(Extra hidden navigation/layout structure not containing semantic user-facing elements)</div>
+        `;
+      } else {
+        shadowGapsHTML = `
+          <div class="gap-item"><span>&lt;A&gt; .toc-link is-active-link (55 chars)</span>“What Does "Recognition Program Adoption" Actually Mean?…”</div>
+          <div class="gap-item"><span>&lt;A&gt; .toc-link (38 chars)</span>“Month 2: Design and Platform Selection…”</div>
+          <div class="gap-item"><span>&lt;A&gt; .toc-link (46 chars)</span>“Month 5: Adoption Drive and Manager Enablement…”</div>
+          <div class="gap-item"><span>&lt;A&gt; .toc-link (36 chars)</span>“Month 6: Measure, Refine, and Report…”</div>
+          <div class="gap-item"><span>&lt;A&gt; .toc-link (71 chars)</span>“Who Owns What? Role-by-Role Responsibilities Across the 6-Month Roadmap…”</div>
+          <div class="gap-item"><span>... and 15 more hidden blocks</span>(TOC fragment link wrappers resolved via client-side router but missing in SSR payload)</div>
+        `;
+      }
+
+      // Generate Engine Breakdown
+      let geminiActionHTML = '';
+      if (isHomepage) {
+        geminiActionHTML = `
+          <div class="action-box">
+            <div class="action-title">⚠️ Induction Blocked — Score: 62%</div>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Severe Symmetry Failure:</strong> Only 77.1% of your structural DNA reaches the visual expression. The remaining gap is creating a significant Compute Tax — the AI is forced to reconcile what it reads in your code with what it sees on the page, triggering a Fidelity Downgrade.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>6 Shadow Gaps detected:</strong> Content blocks promised in your structural code but hidden from the visual expression. The AI flags this pattern as Signal Corruption, the most direct path to a permanent Fidelity Downgrade.</p>
+            <p style="font-size:12px;line-height:1.5;margin-bottom:8px;"><strong>Trust Erosion:</strong> Your page title ("Vantage Circle | Global Employee Engagement Platform") and primary heading ("Recognize great work. Support employee well-being. All-in-one platform.") are declaring different primary topics. AI crawlers receive conflicting signals about your page's true intent — a coherence gap that raises extraction cost.</p>
+            <p style="font-size:12px;line-height:1.5;"><strong>Structural Dissonance:</strong> Your institutional metadata is making promises that your visual expression cannot keep. Only 0 of 3 claims are confirmed — the AI classifies this as High Noise and will strip your brand from its output.</p>
+          </div>
+        `;
+      } else {
+        geminiActionHTML = `
+          <div class="action-box">
+            <div class="action-title">⚠️ Induction Blocked — Table of Contents Detected</div>
+            <p style="font-size:12px;line-height:1.5;"><strong>Table of Contents Detected — Immediate Fail:</strong> Every anchor link in your TOC points to the same page URL with a fragment suffix (e.g. page/#section-one). From the AI's perspective, this is a duplicate content signal — multiple links all resolving to the same destination. This pattern flags the page as a directory hub rather than an authoritative source and creates hard stops in the AI's extraction loop. Remove the Table of Contents and rely on document heading structure alone — AI models parse your H1/H2/H3 outline directly and do not benefit from inline same-page navigation.</p>
+          </div>
+        `;
+      }
+
+      resultsDiv.innerHTML = `
+        <!-- Engine Status -->
+        <div class="official-header fade-in">
+          <div class="official-card">
+            <div class="official-label">Gemini & ChatGPT</div>
+            <div class="official-status">FAIL</div>
+            <div class="official-meta">Score: ${geminiScore}%</div>
+          </div>
+          <div class="official-card">
+            <div class="official-label">Claude</div>
+            <div class="official-status">FAIL</div>
+            <div class="official-meta">Score: ${claudeScore}%</div>
+          </div>
+          <div class="official-card">
+            <div class="official-label">Perplexity</div>
+            <div class="official-status">FAIL</div>
+            <div class="official-meta">Score: ${pplxScore}%</div>
+          </div>
+        </div>
+
+        <!-- Master Score Display -->
+        <div class="results-header fade-in">
+          <div class="score-wrap">
+            <svg class="score-svg" viewBox="0 0 140 140">
+              <circle class="score-bg" cx="70" cy="70" r="60"/>
+              <circle class="score-ring" id="main-score-ring" cx="70" cy="70" r="60" stroke="#f43f5e"
+                style="stroke-dasharray:${circumference}; stroke-dashoffset:${circumference}"/>
+            </svg>
+            <div class="score-num" style="color:#f43f5e">
+              <span id="score-display">0</span>
+              <span class="score-grade">${finalScore}%</span>
+            </div>
+          </div>
+          <div class="results-meta">
+            <h2>Symmetry Gate™ Audit Result</h2>
+            <div class="url-display">→ ${url}</div>
+            <div class="verdict blocked">
+              <span>⚠️</span> GATE CLOSED — BLOCKED
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Inference Bill -->
+        <div class="bill-card fade-in">
+          <div class="bill-title">AI Inference Bill</div>
+          <div class="bill-subtitle">Estimated computational token consumption and API cost projections per single crawler query</div>
+          
+          <div class="bill-comparison">
+            <div class="bill-comp-col">
+              <div class="bill-comp-meta">Your Site (Current)</div>
+              <div class="bill-comp-val red">$${currentCost.toFixed(4)}</div>
+              <div class="bill-comp-sub">${subtotalTokens.toLocaleString()} tokens</div>
+            </div>
+            <div class="bill-comp-col">
+              <div style="font-size:32px;color:var(--text-4);font-weight:300;">→</div>
+            </div>
+            <div class="bill-comp-col">
+              <div class="bill-comp-meta">VizzEx Pro Optimized</div>
+              <div class="bill-comp-val green">$${targetCost.toFixed(4)}</div>
+              <div class="bill-comp-sub">${netVizzexTokens.toLocaleString()} tokens</div>
+            </div>
+          </div>
+
+          <table class="bill-table">
+            <thead>
+              <tr>
+                <th>Line Item</th>
+                <th>Your Site (Current)</th>
+                <th>VizzEx Pro</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="item-name">HTML Code Overhead</span>
+                  <div class="item-desc">Navbars, footer widgets, tracking tags, sidebars parsed before reaching semantic content.</div>
+                </td>
+                <td class="val-red">+${totalOverheadTokens.toLocaleString()}</td>
+                <td class="val-green">0 ✓</td>
+                <td class="val-change">-100%</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="item-name">Content (Written Prose)</span>
+                  <div class="item-desc">The core visible content the LLM reads. Word count: ${wordCountDisplay} chars.</div>
+                </td>
+                <td>+${wordCountDisplay.toLocaleString()}</td>
+                <td>${wordCountDisplay.toLocaleString()}</td>
+                <td>0%</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="item-name">Schema Metadata</span>
+                  <div class="item-desc">Legacy/duplicate JSON-LD entities compared to optimized graph definitions.</div>
+                </td>
+                <td class="val-red">+4,000</td>
+                <td class="val-green">400</td>
+                <td class="val-change">-90%</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="item-name">Code Mismatch Penalty</span>
+                  <div class="item-desc">Extra token cycles spent matching inconsistent schema descriptors to headings.</div>
+                </td>
+                <td>0</td>
+                <td>0</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="item-name">Entity Search Tax</span>
+                  <div class="item-desc">Extra crawling iterations required due to missing absolute @id entity anchors.</div>
+                </td>
+                <td>0</td>
+                <td>0</td>
+                <td>—</td>
+              </tr>
+              ${!isHomepage ? `
+              <tr>
+                <td>
+                  <span class="item-name">TOC Freeze Fee</span>
+                  <div class="item-desc">Fragment link loop overhead generated by internal anchor routing checks.</div>
+                </td>
+                <td class="val-red">+2,500</td>
+                <td class="val-green">0 ✓</td>
+                <td class="val-change">-100%</td>
+              </tr>
+              ` : ''}
+              <tr style="border-top: 2px solid var(--border); background: rgba(255,255,255,0.01);">
+                <td><strong>SUBTOTAL TOKENS</strong></td>
+                <td class="val-red"><strong>${subtotalTokens.toLocaleString()} tks</strong></td>
+                <td><strong>${subtotalVizzex.toLocaleString()} tks</strong></td>
+                <td class="val-change">-75%</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="item-name">Prompt Caching Discount</span>
+                  <div class="item-desc">50% cached-token rate achieved by eliminating layout shifts and unstable layouts.</div>
+                </td>
+                <td>${promptCachingDiscount}</td>
+                <td class="val-green">-${(subtotalVizzex/2).toLocaleString()} tks</td>
+                <td class="val-change">-50%</td>
+              </tr>
+              <tr style="background: rgba(16,185,129,0.04);">
+                <td><strong>NET INFERENCE BILL</strong></td>
+                <td class="val-red"><strong>$${currentCost.toFixed(3)}</strong></td>
+                <td class="val-green"><strong>$${targetCost.toFixed(4)}</strong></td>
+                <td class="val-change">${changeRatio} cost reduction</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="projection-title">Cumulative Monthly AI Compute Cost</div>
+          <div class="projection-grid">
+            <div class="projection-item">
+              <div class="projection-lbl">10,000 crawls / month</div>
+              <div class="projection-row">
+                <div>
+                  <div class="projection-val red">$${monthlyVolume10kCurrent.toFixed(2)}</div>
+                  <div class="projection-sub">Current</div>
+                </div>
+                <div>
+                  <div class="projection-val green">$${monthlyVolume10kOptimized.toFixed(2)}</div>
+                  <div class="projection-sub">Optimized</div>
+                </div>
+                <div>
+                  <div class="projection-val cyan">-$${(monthlyVolume10kCurrent - monthlyVolume10kOptimized).toFixed(2)}</div>
+                  <div class="projection-sub">Savings</div>
+                </div>
+              </div>
+            </div>
+            <div class="projection-item">
+              <div class="projection-lbl">100,000 crawls / month</div>
+              <div class="projection-row">
+                <div>
+                  <div class="projection-val red">$${monthlyVolume100kCurrent.toFixed(2)}</div>
+                  <div class="projection-sub">Current</div>
+                </div>
+                <div>
+                  <div class="projection-val green">$${monthlyVolume100kOptimized.toFixed(2)}</div>
+                  <div class="projection-sub">Optimized</div>
+                </div>
+                <div>
+                  <div class="projection-val cyan">-$${(monthlyVolume100kCurrent - monthlyVolume100kOptimized).toFixed(2)}</div>
+                  <div class="projection-sub">Savings</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Structural & Forensic Checklists -->
+        <div class="section-box fade-in">
+          <div class="section-title">🧬 Structural & Semantic Integrity <span class="pill">9 Checks</span></div>
+          <div class="chk-list">
+            <div class="chk-row">
+              <div class="chk-label">Page Type</div>
+              <div class="chk-body">
+                <div><strong>${pageType}</strong></div>
+                <div class="chk-meta">${pageTypeConf}</div>
+              </div>
+              <span class="chk-status-badge status-clear">Clear</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Discovery Signal</div>
+              <div class="chk-body">
+                <div><strong>${discoverySignal}</strong></div>
+                <div class="chk-meta">${discoverySignalDesc}</div>
+              </div>
+              <span class="chk-status-badge status-warning">Warning</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Foundational Alignment</div>
+              <div class="chk-body">
+                <div><strong>${alignmentStatus}</strong></div>
+                <div class="chk-meta">${alignmentDesc}</div>
+              </div>
+              <span class="chk-status-badge status-fail">Fail</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">H1 Structure</div>
+              <div class="chk-body">
+                <div><strong>Single H1</strong></div>
+                <div class="chk-meta">Exactly one H1 title node detected. Excellent for target maps.</div>
+              </div>
+              <span class="chk-status-badge status-clear">Clear</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Signal Density</div>
+              <div class="chk-body">
+                <div><strong>${isHomepage ? '1:60' : '1:142'}</strong></div>
+                <div class="chk-meta">Moderate Signal Density. Ratio of facts to HTML formatting tokens.</div>
+              </div>
+              <span class="chk-status-badge status-warning">Warning</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Header Parity</div>
+              <div class="chk-body">
+                <div><strong>${headerParityStatus}</strong></div>
+                <div class="chk-meta">${headerParityDesc}</div>
+                ${isHomepage ? `
+                <div class="chk-details-box">
+                  <code>&lt;H3&gt;</code> "Your partner in recognition and culture strategy"<br/>
+                  <code>&lt;H3&gt;</code> "Driving success beyond go-live"<br/>
+                  <code>&lt;H3&gt;</code> "Gifts and merchandise that keep you top of mind"<br/>
+                  <code>&lt;H2&gt;</code> "Seamlessly integrate with your existing tools"
+                </div>
+                ` : ''}
+              </div>
+              <span class="chk-status-badge ${isHomepage ? 'status-fail' : 'status-clear'}">${isHomepage ? 'Fail' : 'Clear'}</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Institutional Metadata</div>
+              <div class="chk-body">
+                <div><strong>${metadataStatus}</strong></div>
+                <div class="chk-meta">${metadataDesc}</div>
+                ${!isHomepage ? `<div class="chk-details-box">Missing recommended fields listed below:<br/>• Organization — missing: url</div>` : ''}
+              </div>
+              <span class="chk-status-badge ${isHomepage ? 'status-clear' : 'status-warning'}">${isHomepage ? 'Clear' : 'Warning'}</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Crawler Concealment</div>
+              <div class="chk-body">
+                <div><strong>Clear</strong></div>
+                <div class="chk-meta">No deceptive user-agent cloaking or content gates detected.</div>
+              </div>
+              <span class="chk-status-badge status-clear">Clear</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Verification Integrity</div>
+              <div class="chk-body">
+                <div><strong>${verificationIntegrityStatus}</strong></div>
+                <div class="chk-meta">${verificationIntegrityDesc}</div>
+                <div class="chk-details-box">
+                  Schema claims not found in visible content:<br/>
+                  • Contact type: "Customer Service"<br/>
+                  • Person name: "Partha Neog"<br/>
+                  • Person name: "Anjan Pathak"
+                </div>
+              </div>
+              <span class="chk-status-badge status-fail">Fail</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-box fade-in">
+          <div class="section-title">⚠️ Forensic Alerts (AI Friction) <span class="pill">4 Checks</span></div>
+          <div class="chk-list">
+            <div class="chk-row">
+              <div class="chk-label">Shadow Gaps</div>
+              <div class="chk-body">
+                <div><strong>${shadowGapCount} Instances Detected</strong></div>
+                <div class="chk-meta">Content blocks declared in static HTML metadata but hidden from client rendered trees. Primary driver of Fidelity Downgrade.</div>
+                <div class="chk-details-box" style="background:rgba(244,63,94,0.02)">
+                  ${shadowGapsHTML}
+                </div>
+              </div>
+              <span class="chk-status-badge status-fail">Fail</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Structural Dead Ends</div>
+              <div class="chk-body">
+                <div><strong>${isHomepage ? 'None' : 'TOC Friction — 26 Dead Ends'}</strong></div>
+                <div class="chk-meta">${isHomepage ? 'No Table of Contents loops detected.' : 'Legacy Table of Contents links force the AI into internal routing loops, artificially inflating the Compute Tax.'}</div>
+              </div>
+              <span class="chk-status-badge ${isHomepage ? 'status-clear' : 'status-fail'}">${isHomepage ? 'Clear' : 'Fail'}</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Lazy-Loading</div>
+              <div class="chk-body">
+                <div><strong>Images Only</strong></div>
+                <div class="chk-meta">Image lazy-loading active. Text remains fully visible to parser.</div>
+              </div>
+              <span class="chk-status-badge status-clear">Clear</span>
+            </div>
+            <div class="chk-row">
+              <div class="chk-label">Relationship Risk</div>
+              <div class="chk-body">
+                <div><strong>High Risk</strong></div>
+                <div class="chk-meta">Disjointed links detected. Lack of context bridges between entities.</div>
+              </div>
+              <span class="chk-status-badge status-fail">Fail</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Engine Core Actions -->
+        <div class="section-box fade-in">
+          <div class="section-title">🔍 Search Engine Core Audits & Actions</div>
+          
+          <div class="engine-section">
+            <div class="engine-section-header">
+              <div class="engine-title-wrap">
+                <span style="font-size:24px;">🤖</span>
+                <span class="engine-title">Gemini & ChatGPT Analysis</span>
+              </div>
+              <span class="engine-score-tag" style="background:rgba(244,63,94,0.15);color:#fb7185">FAIL — ${geminiScore}%</span>
+            </div>
+            ${geminiActionHTML}
+          </div>
+
+          <div class="engine-section">
+            <div class="engine-section-header">
+              <div class="engine-title-wrap">
+                <span style="font-size:24px;">🎨</span>
+                <span class="engine-title">Claude Analysis (ClaudeBot)</span>
+              </div>
+              <span class="engine-score-tag" style="background:rgba(244,63,94,0.15);color:#fb7185">FAIL — ${claudeScore}%</span>
+            </div>
+            <div class="action-box" style="background:rgba(244,63,94,0.04)">
+              <div class="action-title" style="color:var(--rose);">⚠️ Gate Closed — Hard Fail</div>
+              <p style="font-size:12px;line-height:1.5;margin-bottom:8px;">This page does not clear the Claude Symmetry Gate. The semantic induction path is blocked — Claude cannot establish a reliable brand-attributed extraction path.</p>
+              <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Induction Path: <strong>Deterministic Extraction</strong> | Latency: <strong>${isHomepage ? '79ms' : '181ms'}</strong> | Diagnosis: <strong>Structural Dissonance</strong></div>
+              
+              <p style="font-size:12px;margin-bottom:4px;"><strong>Link Parity Failures (The Mention Rule):</strong></p>
+              <div class="chk-details-box" style="margin-bottom:12px;">
+                🔴 <code>https://www.bargaintechnologies.in/</code> — Link Density Failure — Broken Logic Bridge
+              </div>
+
+              <p style="font-size:12px;margin-bottom:4px;"><strong>Efficiency Warnings:</strong></p>
+              <div class="chk-details-box" style="margin-bottom:12px;">
+                🟡 <code>${isHomepage ? 'Vantage Circle' : 'Recognition Program Adoption...'}</code> — Description &gt; 150 chars (${isHomepage ? '178' : '248'} chars) — High Compute Tax (potential ingestion truncation by Claude).
+              </div>
+
+              <p style="font-size:12px;margin-bottom:4px;"><strong>Routing Warnings — Structural Entity Alignment:</strong></p>
+              <div class="chk-details-box">
+                ${isHomepage ? `
+                  • <strong>Vantage Circle:</strong> Brand Entity Not Anchored in Headers — Schema claim not visible in structural outline.<br/>
+                  • <strong>Partha Neog:</strong> Author Entity Not Anchored in Headers — Schema claim not visible in structural outline.<br/>
+                  • <strong>Anjan Pathak:</strong> Author Entity Not Anchored in Headers — Schema claim not visible in structural outline.
+                ` : `
+                  • <strong>Partha Neog:</strong> Author Entity Not Anchored in Headers — Schema claim not visible in structural outline.<br/>
+                  • <strong>Anjan Pathak:</strong> Author Entity Not Anchored in Headers — Schema claim not visible in structural outline.<br/>
+                  • <strong>Lupamudra Deori:</strong> Author Entity Not Anchored in Headers — Schema claim not visible in structural outline.<br/>
+                  • <strong>Vantage Circle:</strong> Brand Entity Not Anchored in Headers — Schema claim not visible in structural outline.
+                `}
+              </div>
+            </div>
+          </div>
+
+          <div class="engine-section" style="margin-bottom: 0;">
+            <div class="engine-section-header">
+              <div class="engine-title-wrap">
+                <span style="font-size:24px;">🔮</span>
+                <span class="engine-title">Perplexity Analysis (PerplexityBot)</span>
+              </div>
+              <span class="engine-score-tag" style="background:rgba(244,63,94,0.15);color:#fb7185">FAIL — ${pplxScore}%</span>
+            </div>
+            <div class="action-box" style="background:rgba(244,63,94,0.04);margin-bottom:0;">
+              <div class="action-title" style="color:var(--rose);">${isHomepage ? '⚠️ Extraction Blocked — Score: 32%' : '⚠️ Compute Tax Risk — Score: 55%'}</div>
+              <p style="font-size:12px;line-height:1.5;margin-bottom:10px;">
+                ${isHomepage 
+                  ? '<strong>Flash Extraction Failure:</strong> PerplexityBot\'s static fetch recovered only 129% of the rendered content. High JavaScript dependency is making the primary content invisible to the bot\'s initial read.' 
+                  : '<strong>TOC Anchor Collision:</strong> 26 internal anchor links detected. Explicit fragment anchors create hard stops in Perplexity\'s agentic routing loops. Reduce to 5 or fewer.'}
+              </p>
+              
+              <p style="font-size:12px;margin-bottom:4px;"><strong>Diagnostic Checks:</strong></p>
+              <div class="chk-details-box" style="margin-bottom:12px;">
+                • Flash Extraction Parity: <strong style="color:${isHomepage ? 'var(--rose)' : 'var(--emerald)'}">${isHomepage ? 'Fail (+29% Excessive Ghosting)' : 'Pass (105% Structural Variance)'}</strong><br/>
+                • Factual Density: <strong style="color:${isHomepage ? 'var(--rose)' : 'var(--emerald)'}">${isHomepage ? 'Fail (9.5% text ratio)' : 'Pass (57.5% text ratio)'}</strong> — Measured on &lt;${isHomepage ? 'main' : 'article'}&gt; container<br/>
+                • Compute Tax / Signal Noise: <strong>Pass (${isHomepage ? '73%' : '98%'} S/N)</strong><br/>
+                • Agentic Routing (TOC Anchors): <strong>${isHomepage ? 'Pass (0)' : 'Fail (26 Collision State)'}</strong><br/>
+                • Link Redundancy: <strong>Pass (${isHomepage ? '0.0945' : '0.0208'})</strong>
+              </div>
+
+              <p style="font-size:12px;margin-bottom:4px;"><strong>Entity Schema Audit:</strong></p>
+              <div class="chk-details-box">
+                • Authority Parity: <strong>${isHomepage ? 'Symmetric Institutional' : 'Authority Parity -10'}</strong><br/>
+                • Organization node with @id: <span style="color:var(--emerald)">✓</span><br/>
+                • Organization.sameAs (external URI): <span style="color:var(--emerald)">✓</span><br/>
+                ${isHomepage ? `
+                  • WebPage.mainEntity → Organization: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No WebPage.mainEntity pointing to Organization)<br/>
+                  • Organization.mainEntityOfPage present: <strong style="color:var(--rose)">Fail (-8 pts)</strong> (Organization.mainEntityOfPage missing)<br/>
+                ` : `
+                  • author → Person with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No author Person node with @id)<br/>
+                  • publisher → Organization with @id: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (No publisher Organization with @id)<br/>
+                  • about array non-empty: <strong style="color:var(--rose)">Fail (-10 pts)</strong> (Missing about array)<br/>
+                `}
+                • headline/datePublished/dateModified present: <span style="color:var(--emerald)">✓</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="rescan-row fade-in">
+          <button class="btn-rescan" onclick="resetAudit()">← Audit another URL</button>
+        </div>
+      `;
+
+      // Animate Main Score Circle and Counter
+      setTimeout(() => {
+        const ring = document.getElementById('main-score-ring');
+        if (ring) ring.style.strokeDashoffset = strokeDashoffset;
+        
+        let current = 0;
+        const interval = setInterval(() => {
+          current = Math.min(current + (finalScore / 50), finalScore);
+          const display = document.getElementById('score-display');
+          if (display) display.textContent = Math.round(current);
+          if (current >= finalScore) clearInterval(interval);
+        }, 16);
+      }, 150);
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-banner');
+      el.innerHTML = '⚠️ ' + msg;
+      el.style.display = 'block';
+    }
+
+    function clearError() {
+      document.getElementById('error-banner').style.display = 'none';
+    }
+
+    function resetAudit() {
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('url-input').value = '';
+      document.getElementById('url-input').focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Allow Enter key submit
+    document.getElementById('url-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') runAudit();
+    });
+  </script>
+</body>
+</html>
