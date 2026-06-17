@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from scrapling.fetchers import StealthyFetcher
+import ipaddress
+import socket
+import urllib.parse
 import uvicorn
 
 app = FastAPI()
@@ -14,10 +17,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+
+def is_private_ip(hostname: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+        return any(ip in net for net in BLOCKED_NETWORKS)
+    except Exception:
+        return True
+
 @app.get("/fetch")
 def fetch_html(url: str):
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            raise HTTPException(status_code=400, detail="Only http and https URLs are allowed")
+        hostname = parsed.hostname or ""
+        if not hostname or is_private_ip(hostname):
+            raise HTTPException(status_code=400, detail="Requests to private or internal addresses are not allowed")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid URL")
     
     print(f"Fetching URL with Scrapling StealthyFetcher: {url}")
     try:

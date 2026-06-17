@@ -1030,7 +1030,7 @@
 
         let structuralSymmetry = (Math.max(10, 100 - (issues.length * 4.5))).toFixed(1) + '%';
         let shadowGapCount = issues.length;
-        let wordCountDisplay = visibleText.length || 7324;
+        let wordCountDisplay = wordCount;
         let totalOverheadTokens = Math.max(1000, Math.round((rawHTML.length - visibleText.length) / 4.2));
         let subtotalTokens = totalOverheadTokens + Math.round(wordCountDisplay / 4.2);
         let netBillTokens = subtotalTokens;
@@ -1045,7 +1045,10 @@
         let monthlyVolume100kCurrent = currentCost * 100000;
         let monthlyVolume100kOptimized = targetCost * 100000;
 
-        // Apply Specific Overrides for Tested URLs to match PDFs exactly
+        // Demo Mode: pre-loaded benchmark results for showcase domains.
+        // These values come from manually audited PDF reports — the tool does not
+        // live-compute scores for these URLs. A yellow "Demo Mode" banner is shown
+        // in the UI whenever one of these domains is detected.
         if (isVantageCircle) {
           if (isHomepage) {
             finalScore = 62; geminiScore = 62; claudeScore = 83; pplxScore = 32;
@@ -1125,6 +1128,7 @@
       const isVantageCircle = url.includes('vantagecircle.com');
       const isWorkhuman = url.includes('workhuman.com');
       const isAchievers = url.includes('achievers.com');
+      const isDemoMode = isOcTanner || isVantageCircle || isWorkhuman || isAchievers;
       const doc = window.auditDoc || document;
       const rawHTML = window.auditRawHTML || '';
       const issues = window.auditIssues || [];
@@ -1859,6 +1863,7 @@
       }
 
       resultsDiv.innerHTML = `
+        ${isDemoMode ? `<div style="background:#fbbf24;color:#1a1a1a;padding:10px 18px;border-radius:8px;margin-bottom:18px;font-size:13px;font-weight:600;letter-spacing:0.02em;">⚡ Demo Mode — Pre-loaded benchmark data for this domain. Enter a different URL above for a live audit.</div>` : ''}
         <!-- Engine Status -->
         <div class="official-header fade-in">
           <div class="official-card">
@@ -1943,7 +1948,7 @@
               <tr>
                 <td>
                   <span class="item-name">Content (Written Prose)</span>
-                  <div class="item-desc">The core visible content the LLM reads. Word count: ${wordCountDisplay} chars.</div>
+                  <div class="item-desc">The core visible content the LLM reads. Word count: ${wordCountDisplay} words.</div>
                 </td>
                 <td>+${wordCountDisplay.toLocaleString()}</td>
                 <td>${wordCountDisplay.toLocaleString()}</td>
@@ -2286,7 +2291,7 @@
 
     function showError(msg) {
       const el = document.getElementById('error-banner');
-      el.innerHTML = '⚠️ ' + msg;
+      el.textContent = '⚠️ ' + msg;
       el.style.display = 'block';
     }
 
