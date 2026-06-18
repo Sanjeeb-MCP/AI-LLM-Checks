@@ -483,6 +483,55 @@
     .btn-export-pdf { background:#6366f1; color:white; border:none; padding:10px 28px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; letter-spacing:0.02em; }
     .btn-export-pdf:hover { background:#4f46e5; }
 
+    /* ── UX Enhancement Additions ── */
+
+    /* Issue cards left-border severity accent */
+    .issue-item.item-border {
+      border-left: 4px solid;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    /* Smooth section transitions */
+    .bill-card, .section-box {
+      transition: box-shadow 0.3s ease;
+    }
+    .bill-card:hover, .section-box:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+
+    /* Better table alternating rows */
+    .bill-table tr:nth-child(even) td {
+      background: rgba(255,255,255,0.01);
+    }
+
+    /* Gradient dividers between sections */
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+      margin: 8px 0 32px;
+    }
+
+    /* Score number pulse on load */
+    @keyframes scoreReveal {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .score-num { animation: scoreReveal 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+    /* Issue fix box improvements */
+    .issue-fix {
+      border-radius: 10px;
+      position: relative;
+    }
+    .issue-fix::before {
+      content: '💡';
+      margin-right: 6px;
+    }
+
+    /* Verdict colors */
+    .verdict.clear { background: rgba(16,185,129,0.15) !important; border: 1px solid rgba(16,185,129,0.3) !important; color: #34d399 !important; }
+    .verdict.warning { background: rgba(245,158,11,0.15) !important; border: 1px solid rgba(245,158,11,0.3) !important; color: #fbbf24 !important; }
+
     @media print {
       body { background: white !important; color: black !important; }
       .bg-orbs, header .badge, .input-card, .rescan-row, .btn-export-pdf { display: none !important; }
@@ -1525,6 +1574,7 @@
       // Circumference of score ring: 2 * PI * 60 = 377
       const circumference = 377;
       const strokeDashoffset = circumference - (finalScore / 100) * circumference;
+      const ringColor = finalScore >= 70 ? '#10b981' : finalScore >= 45 ? '#f59e0b' : '#f43f5e';
 
       const isOcTanner = url.includes('octanner.com') && isHomepage;
       const isVantageCircle = url.includes('vantagecircle.com/en/blog/recognition-program-adoption-roadmap') || (url.includes('vantagecircle.com') && isHomepage);
@@ -2271,18 +2321,18 @@
         { label: 'Last-Modified Date', pass: eeatSignals.hasModified, fix: 'Show a \'Last updated\' date and add dateModified to schema.' },
       ];
       const eeatPanelHTML = `
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #6366f1;">
           <div class="bill-title">🎓 E-E-A-T Signals (${eeatScore !== undefined ? eeatScore : '?'}/25)</div>
           <div class="bill-subtitle">Experience, Expertise, Authoritativeness, Trustworthiness signals detected on-page</div>
-          <div class="issues-list" style="margin-top:16px;">
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
             ${eeatRows.map(r => `
-              <div class="issue-item" style="grid-template-columns:auto 1fr auto;">
-                <span class="issue-sev ${r.pass ? 'status-clear' : 'sev-medium'}" style="font-size:11px;padding:3px 10px;">${r.pass ? 'PASS' : 'FAIL'}</span>
-                <div>
-                  <div class="issue-name">${r.label}</div>
-                  ${!r.pass ? `<div class="issue-fix" style="margin-top:4px;"><strong>Fix:</strong> ${r.fix}</div>` : '<div class="issue-desc" style="color:var(--emerald);">Signal present ✓</div>'}
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;background:${r.pass ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.05)'};border-left:3px solid ${r.pass ? '#10b981' : '#f43f5e'};">
+                <span style="font-size:18px;flex-shrink:0;">${r.pass ? '✅' : '❌'}</span>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:700;">${r.label}</div>
+                  ${!r.pass ? `<div style="font-size:12px;color:#94a3b8;margin-top:2px;"><strong style="color:#f87171;">Fix:</strong> ${r.fix}</div>` : '<div style="font-size:12px;color:#a7f3d0;margin-top:2px;">Signal present ✓</div>'}
                 </div>
-                <span style="font-size:18px;">${r.pass ? '✅' : '❌'}</span>
+                <span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;background:${r.pass ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)'};color:${r.pass ? '#34d399' : '#f87171'};white-space:nowrap;">${r.pass ? 'PASS' : 'FAIL'}</span>
               </div>
             `).join('')}
           </div>
@@ -2294,7 +2344,7 @@
       const rdColor = rd.fk >= 60 ? 'var(--emerald)' : rd.fk >= 50 ? 'var(--amber)' : 'var(--rose)';
       const rdVerdict = rd.fk >= 60 ? 'Ideal for AI citation (Grade 7–9 range)' : rd.fk >= 50 ? 'Acceptable — consider simplifying sentences' : 'Too complex — AI readers prefer simpler prose';
       const readabilityPanelHTML = `
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #f59e0b;">
           <div class="bill-title">📖 Readability Score (Flesch-Kincaid)</div>
           <div class="bill-subtitle">Estimates how easily AI and human readers can parse your content</div>
           <div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap;margin-top:16px;">
@@ -2309,30 +2359,40 @@
               <div style="font-size:11px;color:var(--text-4);margin-top:6px;">Target: FK 60–70 (Grade 8–9). Higher = easier to read.</div>
             </div>
           </div>
+          <div style="position:relative;height:12px;background:rgba(255,255,255,0.05);border-radius:100px;margin:16px 0 6px;overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;height:100%;width:${Math.min(100,rd.fk)}%;background:linear-gradient(90deg,#f43f5e,#f59e0b,#10b981);border-radius:100px;transition:width 1.2s ease;"></div>
+            <div style="position:absolute;left:60%;top:-2px;height:16px;width:2px;background:rgba(255,255,255,0.3);"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;">
+            <span>0 (Unreadable)</span><span>60–70 ← Target</span><span>100 (Very Easy)</span>
+          </div>
         </div>
       `;
 
       // ---- Build FAQ panel ----
       const faqData = window.auditFAQData || { hasFAQSchema: false, questionCount: 0, accordionCount: 0 };
+      const faqQuestionHeadings = faqData.questionCount;
+      const faqHasSchema = faqData.hasFAQSchema;
+      const faqAccordions = faqData.accordionCount;
       const faqPanelHTML = `
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #8b5cf6;">
           <div class="bill-title">❓ FAQ / Q&A Detection</div>
           <div class="bill-subtitle">AI models heavily sample Q&A content for direct answers — structure matters</div>
-          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;">
-            <div style="text-align:center;flex:1;min-width:100px;">
-              <div style="font-size:36px;font-weight:900;color:${faqData.questionCount > 0 ? 'var(--emerald)' : 'var(--rose)'};">${faqData.questionCount}</div>
-              <div style="font-size:12px;color:var(--text-3);">Question Headings</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0;">
+            <div style="text-align:center;padding:16px;background:rgba(139,92,246,0.08);border-radius:12px;border:1px solid rgba(139,92,246,0.2);">
+              <div style="font-size:32px;font-weight:900;color:#a78bfa;">${faqQuestionHeadings}</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;">Question Headings</div>
             </div>
-            <div style="text-align:center;flex:1;min-width:100px;">
-              <div style="font-size:36px;font-weight:900;color:${faqData.hasFAQSchema ? 'var(--emerald)' : 'var(--rose)'};">${faqData.hasFAQSchema ? '✓' : '✗'}</div>
-              <div style="font-size:12px;color:var(--text-3);">FAQPage Schema</div>
+            <div style="text-align:center;padding:16px;background:${faqHasSchema ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.05)'};border-radius:12px;border:1px solid ${faqHasSchema ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.15)'};">
+              <div style="font-size:32px;font-weight:900;color:${faqHasSchema ? '#34d399' : '#f87171'};">${faqHasSchema ? '✓' : '✗'}</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;">FAQPage Schema</div>
             </div>
-            <div style="text-align:center;flex:1;min-width:100px;">
-              <div style="font-size:36px;font-weight:900;color:${faqData.accordionCount > 0 ? 'var(--emerald)' : 'var(--text-4)'};">${faqData.accordionCount}</div>
-              <div style="font-size:12px;color:var(--text-3);">Accordion Items</div>
+            <div style="text-align:center;padding:16px;background:rgba(34,211,238,0.05);border-radius:12px;border:1px solid rgba(34,211,238,0.1);">
+              <div style="font-size:32px;font-weight:900;color:#67e8f9;">${faqAccordions}</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;">Accordion Items</div>
             </div>
           </div>
-          ${faqData.questionCount === 0 && !faqData.hasFAQSchema ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:12px;color:#fbbf24;">Add 3–5 question-phrased H2/H3 headings (What/How/Why/When) and FAQPage JSON-LD schema to improve AI direct-answer eligibility.</div>` : ''}
+          ${faqQuestionHeadings === 0 && !faqHasSchema ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:12px;color:#fbbf24;">Add 3–5 question-phrased H2/H3 headings (What/How/Why/When) and FAQPage JSON-LD schema to improve AI direct-answer eligibility.</div>` : ''}
         </div>
       `;
 
@@ -2397,49 +2457,44 @@
       const sortedIssues = [...issues].sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts));
       const teamBadgeStyle = 'display:inline-block;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px;';
       const roadmapPanelHTML = issues.length > 0 ? `
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #22d3ee;">
           <div class="bill-title">🎯 Priority Fix Roadmap — Highest ROI First</div>
           <div class="bill-subtitle">Issues sorted by point impact. Fix top items first for maximum score gain.</div>
-          <ol style="margin-top:16px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <div style="margin-top:16px;display:flex;flex-direction:column;">
             ${sortedIssues.map((issue, i) => {
-              // Extract team badge from fix HTML if present
               const teamMatch = issue.fix.match(/👤 Team: ([^<]+)<\/span>/);
-              const teamLabel = teamMatch ? teamMatch[1].trim() : '';
-              return `<li style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:8px;">
-                <span style="font-size:18px;font-weight:900;color:var(--indigo);min-width:28px;">${i + 1}.</span>
+              const teamText = teamMatch ? teamMatch[1].trim() : '';
+              return `<div style="display:flex;align-items:flex-start;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">${i + 1}</div>
                 <div style="flex:1;">
-                  <span style="font-size:13px;font-weight:700;">${issue.name}</span>
-                  ${teamLabel ? `<span style="${teamBadgeStyle}">👤 ${teamLabel}</span>` : ''}
+                  <div style="font-weight:700;font-size:14px;">${issue.name}</div>
+                  ${teamText ? `<div style="font-size:12px;color:#64748b;margin-top:2px;">👤 ${teamText}</div>` : ''}
                 </div>
-                <span style="font-size:13px;font-weight:800;color:var(--rose);background:rgba(244,63,94,0.1);padding:2px 8px;border-radius:4px;white-space:nowrap;">${issue.pts} pts</span>
-              </li>`;
+                <div style="font-weight:800;color:#f43f5e;font-size:13px;white-space:nowrap;">${issue.pts} pts</div>
+              </div>`;
             }).join('')}
-          </ol>
+          </div>
         </div>
       ` : '';
 
       // ---- Build Crawler Access Check panel (uses window.auditRobotsData populated async) ----
       // We render a placeholder; a live reload check is done after robots fetch completes
       const robotsData = window.auditRobotsData || null;
+      const botIcons = { 'GPTBot (ChatGPT)': '🤖', 'ClaudeBot (Anthropic)': '🎨', 'Google-Extended (Gemini)': '🔍', 'PerplexityBot': '🔮' };
       const crawlerPanelHTML = `
-        <div class="bill-card fade-in" id="crawler-access-panel">
+        <div class="bill-card fade-in" id="crawler-access-panel" style="border-top:3px solid #10b981;">
           <div class="bill-title">🤖 Crawler Access Check</div>
           <div class="bill-subtitle">Checks robots.txt for AI bot permissions and sitemap inclusion</div>
           ${robotsData ? `
-          <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:16px;">
-            <thead><tr>
-              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-3);font-weight:700;font-size:11px;text-transform:uppercase;">Bot</th>
-              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-3);font-weight:700;font-size:11px;text-transform:uppercase;">Status</th>
-            </tr></thead>
-            <tbody>
-              ${[['GPTBot (ChatGPT)', robotsData.gptbot],['ClaudeBot (Anthropic)', robotsData.claudebot],['Google-Extended (Gemini)', robotsData.googleExt],['PerplexityBot', robotsData.pplxbot]].map(([name, allowed]) => `
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.02);">
-                <td style="padding:10px;">${name}</td>
-                <td style="padding:10px;"><span style="padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;background:${allowed ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'};color:${allowed ? '#34d399' : '#f87171'};border:1px solid ${allowed ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.25)'};">${allowed ? 'ALLOWED' : 'BLOCKED'}</span></td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-          <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:8px;font-size:12px;color:var(--text-2);">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:16px 0;">
+            ${[['GPTBot (ChatGPT)', robotsData.gptbot],['ClaudeBot (Anthropic)', robotsData.claudebot],['Google-Extended (Gemini)', robotsData.googleExt],['PerplexityBot', robotsData.pplxbot]].map(([name, allowed]) => `
+            <div style="padding:14px;border-radius:10px;background:${allowed ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'};border:1px solid ${allowed ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.2)'};">
+              <div style="font-size:20px;margin-bottom:4px;">${botIcons[name] || '🤖'}</div>
+              <div style="font-weight:700;font-size:13px;">${name}</div>
+              <div style="font-size:11px;margin-top:2px;color:${allowed ? '#34d399' : '#f87171'};font-weight:600;">${allowed ? 'ALLOWED' : 'BLOCKED'}</div>
+            </div>`).join('')}
+          </div>
+          <div style="padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:8px;font-size:12px;color:var(--text-2);">
             Sitemap: ${robotsData.sitemapFound ? `<span style="color:var(--emerald);">Found</span>` : `<span style="color:var(--rose);">Not found at /sitemap.xml</span>`}
             &nbsp;|&nbsp;
             URL in sitemap: ${robotsData.inSitemap ? `<span style="color:var(--emerald);">Yes ✓</span>` : `<span style="color:var(--amber);">Not detected</span>`}
@@ -2463,12 +2518,17 @@
                   <table class="history-table">
                     <thead><tr><th>URL</th><th>Date</th><th>Score</th><th>Issues</th></tr></thead>
                     <tbody>
-                      ${recent.map(e => `<tr>
+                      ${recent.map(e => {
+                        const sc = e.finalScore || 0;
+                        const scoreColor = sc >= 70 ? '#10b981' : sc >= 45 ? '#f59e0b' : '#f43f5e';
+                        const scoreBg = sc >= 70 ? 'rgba(16,185,129,0.1)' : sc >= 45 ? 'rgba(245,158,11,0.1)' : 'rgba(244,63,94,0.1)';
+                        return `<tr>
                         <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;">${(e.url || '').slice(0, 50)}${(e.url || '').length > 50 ? '…' : ''}</td>
                         <td>${e.date ? new Date(e.date).toLocaleDateString() : ''}</td>
-                        <td><strong style="color:${(e.finalScore || 0) >= 70 ? 'var(--emerald)' : (e.finalScore || 0) >= 45 ? 'var(--amber)' : 'var(--rose)'};">${e.finalScore || 0}%</strong></td>
+                        <td><span style="font-weight:700;color:${scoreColor};background:${scoreBg};padding:2px 8px;border-radius:4px;">${sc}%</span></td>
                         <td>${e.issueCount || 0}</td>
-                      </tr>`).join('')}
+                      </tr>`;
+                      }).join('')}
                     </tbody>
                   </table>
                 </div>
@@ -2485,18 +2545,27 @@
         <div class="official-header fade-in">
           <div class="official-card">
             <div class="official-label">Gemini & ChatGPT</div>
-            <div class="official-status">FAIL</div>
+            <div class="official-status" style="color:${geminiScore >= 70 ? '#10b981' : geminiScore >= 45 ? '#f59e0b' : '#f43f5e'}">${geminiScore >= 70 ? 'PASS' : 'FAIL'}</div>
             <div class="official-meta">Score: ${geminiScore}%</div>
+            <div style="margin-top:10px;background:rgba(255,255,255,0.05);border-radius:100px;height:4px;">
+              <div style="width:${geminiScore}%;height:4px;border-radius:100px;background:${geminiScore >= 70 ? '#10b981' : geminiScore >= 45 ? '#f59e0b' : '#f43f5e'};transition:width 1.2s ease;"></div>
+            </div>
           </div>
           <div class="official-card">
             <div class="official-label">Claude</div>
-            <div class="official-status">FAIL</div>
+            <div class="official-status" style="color:${claudeScore >= 70 ? '#10b981' : claudeScore >= 45 ? '#f59e0b' : '#f43f5e'}">${claudeScore >= 70 ? 'PASS' : 'FAIL'}</div>
             <div class="official-meta">Score: ${claudeScore}%</div>
+            <div style="margin-top:10px;background:rgba(255,255,255,0.05);border-radius:100px;height:4px;">
+              <div style="width:${claudeScore}%;height:4px;border-radius:100px;background:${claudeScore >= 70 ? '#10b981' : claudeScore >= 45 ? '#f59e0b' : '#f43f5e'};transition:width 1.2s ease;"></div>
+            </div>
           </div>
           <div class="official-card">
             <div class="official-label">Perplexity</div>
-            <div class="official-status">FAIL</div>
+            <div class="official-status" style="color:${pplxScore >= 70 ? '#10b981' : pplxScore >= 45 ? '#f59e0b' : '#f43f5e'}">${pplxScore >= 70 ? 'PASS' : 'FAIL'}</div>
             <div class="official-meta">Score: ${pplxScore}%</div>
+            <div style="margin-top:10px;background:rgba(255,255,255,0.05);border-radius:100px;height:4px;">
+              <div style="width:${pplxScore}%;height:4px;border-radius:100px;background:${pplxScore >= 70 ? '#10b981' : pplxScore >= 45 ? '#f59e0b' : '#f43f5e'};transition:width 1.2s ease;"></div>
+            </div>
           </div>
         </div>
 
@@ -2505,10 +2574,10 @@
           <div class="score-wrap">
             <svg class="score-svg" viewBox="0 0 140 140">
               <circle class="score-bg" cx="70" cy="70" r="60"/>
-              <circle class="score-ring" id="main-score-ring" cx="70" cy="70" r="60" stroke="#f43f5e"
+              <circle class="score-ring" id="main-score-ring" cx="70" cy="70" r="60" stroke="${ringColor}"
                 style="stroke-dasharray:${circumference}; stroke-dashoffset:${circumference}"/>
             </svg>
-            <div class="score-num" style="color:#f43f5e">
+            <div class="score-num" style="color:${ringColor}">
               <span id="score-display">0</span>
               <span class="score-grade">${finalScore}%</span>
             </div>
@@ -2525,7 +2594,7 @@
         </div>
 
         <!-- Evidence Signals Panel -->
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #14b8a6;">
           <div class="bill-title">Evidence Signals (GEO Research-Backed)</div>
           <div class="bill-subtitle">Highest-impact signals for AI citation readiness — sourced from peer-reviewed GEO research (2023–2025)</div>
 
@@ -2575,29 +2644,46 @@
 
         <!-- Issues & Fix Suggestions -->
         ${issues.length > 0 ? `
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #f43f5e;">
           <div class="bill-title">⚠️ Issues Found — Action Required (${issues.length})</div>
           <div class="bill-subtitle">Each issue includes the fix and which team is responsible</div>
           <div class="issues-list" style="margin-top:16px;">
-            ${issues.map(issue => `
-              <div class="issue-item">
-                <span class="issue-sev sev-${issue.sev}">${issue.sev}</span>
+            ${issues.map(issue => {
+              const sev = issue.sev;
+              const borderColor = sev === 'critical' ? '#f43f5e' : sev === 'high' ? '#fb923c' : sev === 'medium' ? '#f59e0b' : '#22d3ee';
+              return `
+              <div class="issue-item item-border" style="border-left:4px solid ${borderColor};border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:16px 20px;background:rgba(15,23,42,0.4);margin-bottom:0;">
+                <span class="issue-sev sev-${sev}">${sev}</span>
                 <div>
                   <div class="issue-name">${issue.name}</div>
                   <div class="issue-desc">${issue.desc}</div>
                   <div class="issue-fix">${issue.fix}</div>
                 </div>
                 <span class="issue-pts">${issue.pts}</span>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
         </div>
         ` : `
-        <div class="bill-card fade-in" style="border-color:rgba(16,185,129,0.3);">
+        <div class="bill-card fade-in" style="border-color:rgba(16,185,129,0.3);border-top:3px solid #10b981;">
           <div class="bill-title" style="color:#34d399;">✅ No Critical Issues Found</div>
           <div class="bill-subtitle">This page is well-optimised for AI citation readiness</div>
         </div>
         `}
+
+        ${passing.length > 0 ? `
+        <div class="bill-card fade-in" style="border-top:3px solid #10b981;">
+          <div class="bill-title" style="color:#34d399;">✅ Passing Checks (${passing.length})</div>
+          <div class="bill-subtitle">These signals are correctly implemented and boost your citation readiness</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:16px;">
+            ${passing.map(item => `
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(16,185,129,0.05);border-radius:6px;border-left:3px solid #10b981;font-size:12px;color:#a7f3d0;">
+                <span style="flex-shrink:0;">✓</span> ${item}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
 
         <!-- E-E-A-T Signals -->
         ${eeatPanelHTML}
@@ -2615,7 +2701,7 @@
         ${crawlerPanelHTML}
 
         <!-- AI Inference Bill -->
-        <div class="bill-card fade-in">
+        <div class="bill-card fade-in" style="border-top:3px solid #fb923c;">
           <div class="bill-title">AI Inference Bill</div>
           <div class="bill-subtitle">Estimated computational token consumption and API cost projections per single crawler query</div>
           
@@ -2978,12 +3064,9 @@
 
         </div>
 
-        <div style="text-align:center;margin:24px 0 8px;">
-          <button onclick="window.print()" class="btn-export-pdf">⬇ Download PDF Report</button>
-        </div>
-
-        <div class="rescan-row fade-in">
-          <button class="btn-rescan" onclick="resetAudit()">← Audit another URL</button>
+        <div style="text-align:center;margin:32px 0 16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button onclick="window.print()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.02em;box-shadow:0 4px 20px rgba(99,102,241,0.3);transition:all 0.2s;font-family:'Outfit',sans-serif;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">⬇ Download PDF Report</button>
+          <button onclick="resetAudit()" style="background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,0.08);padding:12px 32px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Outfit',sans-serif;" onmouseover="this.style.borderColor='#6366f1';this.style.color='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='#94a3b8'">← Audit Another URL</button>
         </div>
       `;
 
