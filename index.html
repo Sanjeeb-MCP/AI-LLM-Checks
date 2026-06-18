@@ -948,6 +948,119 @@
       return Math.max(0, score);
     }
 
+    function analyseEvidence(doc, issues, passing) {
+      let score = 25;
+      const visibleText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
+      const wordCount = visibleText.trim().split(/\s+/).filter(Boolean).length;
+
+      // 1. Stat/Number Density
+      let statScore = 5;
+      const statMatches = visibleText.match(/[\$£€¥]\d+|[\d,]+%|[\d,]+ (?:million|billion|thousand|million|million)\b/gi) || [];
+      const sentenceCount = (visibleText.match(/[.!?]+/g) || []).length;
+      const statsPerSentence = sentenceCount > 0 ? statMatches.length / sentenceCount : 0;
+      if (statsPerSentence < 0.05) {
+        issues.push({
+          sev: 'medium', cat: 'Evidence', pts: -5,
+          name: 'Low Stat/Number Density',
+          desc: `Only ${statMatches.length} statistics/figures detected. Research shows pages with data points, percentages, and quantities are cited ${(61 + 77) / 2}% more often.`,
+          fix: '<strong>Fix:</strong> Add quantified data points, statistics, percentages, or monetary values to support claims.'
+        });
+        statScore = 0;
+      } else {
+        passing.push(`${statMatches.length} statistics/figures detected — strong evidence density ✓`);
+      }
+
+      // 2. Quotation/Attribution
+      let quoteScore = 5;
+      const quotePatterns = /[""].*?[""]|(?:according to|research shows|cited in|studies show|evidence shows|data indicates|research indicates)/gi;
+      const quoteMatches = visibleText.match(quotePatterns) || [];
+      if (quoteMatches.length < 2) {
+        issues.push({
+          sev: 'low', cat: 'Evidence', pts: -3,
+          name: 'Few Direct Quotations or Citations',
+          desc: `Only ${quoteMatches.length} quotations/citations detected. Expert quotes increase AI citation likelihood by 28%.`,
+          fix: '<strong>Fix:</strong> Include direct quotations from experts, research papers, or authoritative sources.'
+        });
+        quoteScore = 2;
+      } else {
+        passing.push(`${quoteMatches.length} quotations/citations found — authority anchored ✓`);
+      }
+
+      // 3. Comparative Language
+      let compareScore = 5;
+      const comparativePatterns = /\bvs\.?\b|compared to|unlike|different from|better than|worse than|superior to|inferior to/gi;
+      const compareMatches = visibleText.match(comparativePatterns) || [];
+      if (compareMatches.length < 2) {
+        issues.push({
+          sev: 'low', cat: 'Evidence', pts: -2,
+          name: 'No Comparative Context',
+          desc: `Comparative listicle format accounts for 32.5% of all AI citations. This page lacks comparative language.`,
+          fix: '<strong>Fix:</strong> Add comparisons, contrasts, or "vs" sections to provide relative context.'
+        });
+        compareScore = 2;
+      } else {
+        passing.push(`${compareMatches.length} comparative statements — structured for contrast ✓`);
+      }
+
+      // 4. Content Format Detection
+      let formatScore = 5;
+      const h1Text = (doc.querySelector('h1')?.textContent || '').toLowerCase();
+      const listItems = doc.querySelectorAll('li').length;
+      const isListicle = listItems > 5 && /\b(list|guide|steps|tips|ways|reasons|best)\b/i.test(h1Text);
+      const isHowTo = /\bhow\s+to\b|step-by-step|tutorial|guide/i.test(h1Text);
+      const isComparison = /\bvs\.?\b|versus|comparison|compared/i.test(h1Text);
+      const isDefinition = /\bwhat\s+is|definition|meaning|refers to/i.test(h1Text);
+
+      let formatType = 'General Article';
+      if (isListicle) formatType = 'Listicle';
+      else if (isHowTo) formatType = 'How-To Guide';
+      else if (isComparison) formatType = 'Comparison';
+      else if (isDefinition) formatType = 'Definition/Reference';
+
+      if (!isListicle && !isHowTo && !isComparison && !isDefinition) {
+        formatScore = 4;
+      }
+      passing.push(`Content format: <strong>${formatType}</strong>`);
+      window.auditContentFormat = formatType;
+
+      // 5. Vocabulary Alignment (simplified PAWC proxy)
+      let vocabScore = 5;
+      const titleText = (doc.querySelector('title')?.textContent || '').toLowerCase();
+      const h1Combined = h1Text + ' ' + titleText;
+      const h1Words = h1Combined.split(/\W+/).filter(w => w.length > 3);
+      const bodyLowercase = visibleText.toLowerCase();
+      let totalKeywordHits = 0;
+      for (const word of h1Words) {
+        const regex = new RegExp(`\\b${word}\\b`, 'g');
+        totalKeywordHits += (bodyLowercase.match(regex) || []).length;
+      }
+      const keywordCoverage = h1Words.length > 0 ? totalKeywordHits / h1Words.length : 0;
+      if (keywordCoverage < 3) {
+        issues.push({
+          sev: 'medium', cat: 'Evidence', pts: -5,
+          name: 'Low Vocabulary Alignment',
+          desc: `Keywords from your H1/title recur only ${keywordCoverage.toFixed(1)}x per term in the body. Semantic alignment (β=+0.37) is the strongest page-level predictor of AI citation.`,
+          fix: '<strong>Fix:</strong> Ensure your H1 and opening paragraphs establish the core topic, then reinforce it throughout the body.'
+        });
+        vocabScore = 0;
+      } else {
+        passing.push(`Vocabulary alignment: H1/title terms recur ${keywordCoverage.toFixed(1)}x in body — well-aligned ✓`);
+      }
+
+      score = statScore + quoteScore + compareScore + formatScore + vocabScore;
+
+      // Store sub-scores for dashboard display
+      window.auditEvidenceScores = {
+        stat: statScore,
+        quote: quoteScore,
+        compare: compareScore,
+        format: formatScore,
+        vocab: vocabScore
+      };
+
+      return Math.max(0, Math.min(25, score));
+    }
+
     /* ============================================================
        AUDIT ENGINE
        ============================================================ */
@@ -1011,6 +1124,7 @@
         setStep('Running LLM search engine specific crawlers simulations...');
         await delay(500);
         const accessScore = analyseAccessibility(doc, rawHTML, issues, passing);
+        const evidenceScore = analyseEvidence(doc, issues, passing);
         markStep('step-d', 'done');
 
         // Compute scores dynamically
@@ -1020,10 +1134,10 @@
         const isWorkhuman = url.includes('workhuman.com');
         const isAchievers = url.includes('achievers.com');
 
-        let finalScore = Math.max(10, Math.min(100, structScore + payloadScore + schemaScore + accessScore));
-        let geminiScore = Math.max(15, Math.min(100, Math.round((structScore/25*30) + (schemaScore/25*40) + (payloadScore/25*15) + (accessScore/25*15))));
-        let claudeScore = Math.max(15, Math.min(100, Math.round((structScore/25*40) + (accessScore/25*30) + (payloadScore/25*20) + (schemaScore/25*10))));
-        let pplxScore = Math.max(15, Math.min(100, Math.round((accessScore/25*40) + (payloadScore/25*30) + (schemaScore/25*30))));
+        let finalScore = Math.max(10, Math.min(100, Math.round((structScore + payloadScore + schemaScore + accessScore + evidenceScore) / 125 * 100)));
+        let geminiScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*30) + (structScore/25*25) + (payloadScore/25*20) + (schemaScore/25*15) + (accessScore/25*10))));
+        let claudeScore = Math.max(15, Math.min(100, Math.round((structScore/25*35) + (evidenceScore/25*30) + (accessScore/25*20) + (payloadScore/25*10) + (schemaScore/25*5))));
+        let pplxScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*35) + (accessScore/25*25) + (payloadScore/25*25) + (schemaScore/25*10) + (structScore/25*5))));
 
         const visibleText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
         const wordCount = visibleText.trim().split(/\s+/).filter(Boolean).length || 800;
@@ -1905,6 +2019,55 @@
           </div>
         </div>
 
+        <!-- Evidence Signals Panel -->
+        <div class="bill-card fade-in">
+          <div class="bill-title">Evidence Signals (GEO Research-Backed)</div>
+          <div class="bill-subtitle">Highest-impact signals for AI citation readiness — sourced from peer-reviewed GEO research (2023–2025)</div>
+
+          <div style="margin-bottom:16px;padding:12px;background:rgba(20,184,166,0.05);border-left:3px solid #14b8a6;border-radius:4px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <div>
+                <strong>Content Format:</strong>
+                <span style="background:#ecfdf5;color:#065f46;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:600;margin-left:6px;">
+                  ${window.auditContentFormat || 'General Article'}
+                </span>
+              </div>
+              <div style="color:#666;font-size:12px;">
+                <strong>PAWC Efficiency:</strong> ${((wordCountDisplay / Math.max(1, totalOverheadTokens)) * 100).toFixed(1)}%
+              </div>
+            </div>
+          </div>
+
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tbody>
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:10px;"><strong>1. Stat/Number Density</strong><br/><span style="font-size:11px;color:#666;">Quantified claims: +41–76% citation uplift</span></td>
+                <td style="padding:10px;text-align:right;"><span id="evidence-stat-score" style="font-weight:600;color:#14b8a6;">○○○○○</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:10px;"><strong>2. Quotation/Attribution</strong><br/><span style="font-size:11px;color:#666;">Expert quotes & citations: +28% likelihood</span></td>
+                <td style="padding:10px;text-align:right;"><span id="evidence-quote-score" style="font-weight:600;color:#f59e0b;">○○○○○</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:10px;"><strong>3. Comparative Language</strong><br/><span style="font-size:11px;color:#666;">Listicles account for 32.5% of AI citations</span></td>
+                <td style="padding:10px;text-align:right;"><span id="evidence-compare-score" style="font-weight:600;color:#8b5cf6;">○○○○○</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:10px;"><strong>4. Content Format Detection</strong><br/><span style="font-size:11px;color:#666;">Format type predicts citation probability</span></td>
+                <td style="padding:10px;text-align:right;"><span id="evidence-format-score" style="font-weight:600;color:#ec4899;">○○○○○</span></td>
+              </tr>
+              <tr>
+                <td style="padding:10px;"><strong>5. Vocabulary Alignment</strong><br/><span style="font-size:11px;color:#666;">β=+0.37 dominant page-level signal</span></td>
+                <td style="padding:10px;text-align:right;"><span id="evidence-vocab-score" style="font-weight:600;color:#06b6d4;">○○○○○</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top:16px;padding:12px;background:#f0f9ff;border-left:3px solid #3b82f6;border-radius:4px;font-size:12px;color:#1e40af;">
+            <strong>📊 Research basis:</strong> GEO papers (arxiv 2311.09735, 2604.25707, 2509.10762), Ahrefs schema study, Conductor AEO benchmarks, SignalsCite framework.
+          </div>
+        </div>
+
         <!-- AI Inference Bill -->
         <div class="bill-card fade-in">
           <div class="bill-title">AI Inference Bill</div>
@@ -2287,6 +2450,27 @@
           if (current >= finalScore) clearInterval(interval);
         }, 16);
       }, 150);
+
+      // Populate Evidence Signals bars
+      setTimeout(() => {
+        const scores = window.auditEvidenceScores || { stat: 0, quote: 0, compare: 0, format: 0, vocab: 0 };
+        const maxScore = 5;
+        const renderCircles = (score) => '●'.repeat(score) + '○'.repeat(maxScore - score);
+
+        const els = {
+          stat: document.getElementById('evidence-stat-score'),
+          quote: document.getElementById('evidence-quote-score'),
+          compare: document.getElementById('evidence-compare-score'),
+          format: document.getElementById('evidence-format-score'),
+          vocab: document.getElementById('evidence-vocab-score')
+        };
+
+        if (els.stat) els.stat.textContent = renderCircles(Math.round(scores.stat));
+        if (els.quote) els.quote.textContent = renderCircles(Math.round(scores.quote));
+        if (els.compare) els.compare.textContent = renderCircles(Math.round(scores.compare));
+        if (els.format) els.format.textContent = renderCircles(Math.round(scores.format));
+        if (els.vocab) els.vocab.textContent = renderCircles(Math.round(scores.vocab));
+      }, 200);
     }
 
     function showError(msg) {
