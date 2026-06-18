@@ -467,6 +467,28 @@
     /* Fade-in animation */
     .fade-in { animation: fadeIn 0.4s ease forwards; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Radar chart wrap */
+    .radar-wrap { display:flex; justify-content:center; margin-top:16px; }
+
+    /* Recent audits collapsible */
+    .history-section { margin-bottom:24px; }
+    .history-toggle { background:none; border:1px solid var(--border); color:var(--text-2); border-radius:var(--radius-sm); padding:8px 18px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Outfit',sans-serif; }
+    .history-toggle:hover { border-color:var(--indigo); color:var(--text-1); }
+    .history-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+    .history-table th { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text-3); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; }
+    .history-table td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.02); color:var(--text-2); }
+
+    /* PDF export button */
+    .btn-export-pdf { background:#6366f1; color:white; border:none; padding:10px 28px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; letter-spacing:0.02em; }
+    .btn-export-pdf:hover { background:#4f46e5; }
+
+    @media print {
+      body { background: white !important; color: black !important; }
+      .bg-orbs, header .badge, .input-card, .rescan-row, .btn-export-pdf { display: none !important; }
+      .bill-card, .section-box { border: 1px solid #ddd !important; page-break-inside: avoid; }
+      * { color: black !important; background: transparent !important; }
+    }
   </style>
 </head>
 <body>
@@ -1062,6 +1084,255 @@
     }
 
     /* ============================================================
+       E-E-A-T SIGNALS
+       ============================================================ */
+    function analyseEEAT(doc, issues, passing) {
+      let score = 0;
+
+      // 1. Author bio present
+      const hasAuthor = !!(doc.querySelector('[rel="author"], .author, [itemtype*="Person"], [itemprop="author"]'));
+      if (hasAuthor) {
+        score += 5;
+        passing.push('Author attribution found on page ✓');
+      } else {
+        issues.push({
+          sev: 'high', cat: 'E-E-A-T', pts: -5,
+          name: 'No Author Attribution',
+          desc: 'No visible author byline or author markup detected. AI systems heavily discount unattributed content.',
+          fix: '<strong>Fix:</strong> Add a visible author byline with name, photo, and title.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
+        });
+      }
+
+      // 2. Visible publication date
+      const hasDate = !!(doc.querySelector('time[datetime], [itemprop="datePublished"], .date, .published'));
+      if (hasDate) {
+        score += 5;
+        passing.push('Visible publication date found ✓');
+      } else {
+        issues.push({
+          sev: 'medium', cat: 'E-E-A-T', pts: -3,
+          name: 'No Publication Date',
+          desc: 'No visible publication date detected. AI systems use dates to assess freshness and credibility.',
+          fix: '<strong>Fix:</strong> Add a visible publish date and keep it updated.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer + Content Writer</span>'
+        });
+      }
+
+      // 3. External authoritative links (≥2)
+      const allLinks = [...doc.querySelectorAll('a[href]')];
+      const authLinkCount = allLinks.filter(a => {
+        const href = (a.getAttribute('href') || '').toLowerCase();
+        return href.includes('.gov') || href.includes('.edu') || href.includes('wikipedia.org') || href.includes('scholar.google');
+      }).length;
+      if (authLinkCount >= 2) {
+        score += 5;
+        passing.push(`${authLinkCount} external authoritative links found (.gov/.edu/Wikipedia) ✓`);
+      } else {
+        issues.push({
+          sev: 'medium', cat: 'E-E-A-T', pts: -3,
+          name: 'No External Authoritative Links',
+          desc: `Only ${authLinkCount} authoritative outbound links found. Linking to .gov, .edu, Wikipedia or research papers boosts E-E-A-T signals.`,
+          fix: '<strong>Fix:</strong> Link out to at least 2 authoritative sources (.gov, .edu, Wikipedia, research papers).<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
+        });
+      }
+
+      // 4. Author credentials in visible text
+      const visibleText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
+      const credentialPattern = /\b(PhD|MBA|MD|CEO|CTO|professor|researcher|expert|certified)\b/i;
+      const hasCredentials = credentialPattern.test(visibleText);
+      if (hasCredentials) {
+        score += 5;
+        passing.push('Author credentials/expertise signals detected in visible text ✓');
+      } else {
+        issues.push({
+          sev: 'low', cat: 'E-E-A-T', pts: -2,
+          name: 'No Author Credentials',
+          desc: 'No credential signals (PhD, MBA, expert, certified, etc.) detected in visible text. Author expertise signals improve E-E-A-T assessment.',
+          fix: '<strong>Fix:</strong> Mention the author\'s qualifications in the bio or byline.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
+        });
+      }
+
+      // 5. Last-modified date present
+      const hasModified = !!(doc.querySelector('[itemprop="dateModified"], .last-updated, .modified'));
+      if (hasModified) {
+        score += 5;
+        passing.push('Last-modified date present ✓');
+      } else {
+        issues.push({
+          sev: 'low', cat: 'E-E-A-T', pts: -2,
+          name: 'No Last-Modified Date',
+          desc: 'No last-modified date detected. Freshness signals help AI systems prioritise up-to-date content.',
+          fix: '<strong>Fix:</strong> Show a \'Last updated\' date and add dateModified to your schema.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
+        });
+      }
+
+      // Store for dashboard
+      window.auditEEATSignals = { hasAuthor, hasDate, authLinkCount, hasCredentials, hasModified };
+
+      return Math.max(0, Math.min(25, score));
+    }
+
+    /* ============================================================
+       READABILITY SCORE
+       ============================================================ */
+    function calcReadability(doc) {
+      const visibleText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
+      const cleanText = visibleText.replace(/\s+/g, ' ').trim();
+      if (!cleanText) return { fk: 0, grade: 'N/A', wps: 0, label: 'No content' };
+
+      const words = cleanText.split(/\s+/).filter(Boolean);
+      const wordCount = words.length || 1;
+      const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 3);
+      const sentenceCount = sentences.length || 1;
+
+      // Approximate syllables by counting vowel groups
+      function countSyllables(word) {
+        word = word.toLowerCase().replace(/[^a-z]/g, '');
+        if (word.length <= 3) return 1;
+        const vowelGroups = word.match(/[aeiouy]+/g) || [];
+        let count = vowelGroups.length;
+        if (word.endsWith('e') && count > 1) count--;
+        return Math.max(1, count);
+      }
+      const totalSyllables = words.reduce((sum, w) => sum + countSyllables(w), 0);
+
+      const wps = wordCount / sentenceCount;
+      const spw = totalSyllables / wordCount;
+      const fk = Math.round(206.835 - 1.015 * wps - 84.6 * spw);
+      const fkClamped = Math.max(0, Math.min(100, fk));
+
+      // Grade level from FK score
+      let grade, label;
+      if (fkClamped >= 80) { grade = '5-6'; label = 'Grade 5–6 (Very Easy)'; }
+      else if (fkClamped >= 70) { grade = '7'; label = 'Grade 7 (Easy)'; }
+      else if (fkClamped >= 60) { grade = '8-9'; label = 'Grade 8–9 (Good for AI)'; }
+      else if (fkClamped >= 50) { grade = '10-12'; label = 'Grade 10–12 (Moderate)'; }
+      else if (fkClamped >= 30) { grade = '13-15'; label = 'College (Hard)'; }
+      else { grade = '16+'; label = 'Post-Graduate (Very Hard)'; }
+
+      return { fk: fkClamped, grade, wps: wps.toFixed(1), label };
+    }
+
+    /* ============================================================
+       FAQ / Q&A DETECTION
+       ============================================================ */
+    function analyseFAQ(doc, issues, passing) {
+      // Check FAQ JSON-LD
+      let hasFAQSchema = false;
+      [...doc.querySelectorAll('script[type="application/ld+json"]')].forEach(s => {
+        try {
+          const text = s.textContent;
+          if (text.includes('"FAQPage"')) hasFAQSchema = true;
+        } catch(e) {}
+      });
+
+      // Question headings
+      const questionHeadings = [...doc.querySelectorAll('h2,h3')].filter(h => {
+        return /^(what|how|why|when|is|can|does|should)\b/i.test(h.textContent.trim());
+      });
+
+      // Details/summary accordion
+      const accordionCount = doc.querySelectorAll('details').length;
+
+      const totalQuestions = questionHeadings.length + (hasFAQSchema ? 3 : 0) + accordionCount;
+
+      if (questionHeadings.length === 0 && !hasFAQSchema) {
+        issues.push({
+          sev: 'medium', cat: 'FAQ', pts: -3,
+          name: 'No FAQ / Q&A Structure',
+          desc: 'No question-phrased headings or FAQPage schema detected. AI models heavily sample FAQ content for direct answers.',
+          fix: '<strong>Fix:</strong> Add 3–5 Q&A sections using question-phrased H2/H3 headings. Add FAQPage JSON-LD schema. AI models heavily sample FAQ content for direct answers.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer + Developer</span>'
+        });
+      } else {
+        passing.push(`FAQ/Q&A structure detected (${questionHeadings.length} question headings, FAQ schema: ${hasFAQSchema ? 'yes' : 'no'}) ✓`);
+      }
+
+      window.auditFAQData = { hasFAQSchema, questionCount: questionHeadings.length, accordionCount };
+      return { hasFAQSchema, questionCount: questionHeadings.length, accordionCount };
+    }
+
+    /* ============================================================
+       ROBOTS.TXT + SITEMAP CHECK
+       ============================================================ */
+    async function checkRobotsAndSitemap(url) {
+      let origin;
+      try { origin = new URL(url).origin; } catch(e) { return null; }
+
+      const result = { gptbot: true, claudebot: true, googleExt: true, pplxbot: true, inSitemap: false, sitemapFound: false };
+
+      // Fetch robots.txt
+      try {
+        const robotsUrl = origin + '/robots.txt';
+        let robotsText = '';
+        try {
+          const res = await fetch(PROXY_SERVER + encodeURIComponent(robotsUrl));
+          if (res.ok) { const d = await res.json(); robotsText = d.contents || ''; }
+        } catch(e) {
+          try {
+            const res = await fetch(robotsUrl);
+            if (res.ok) robotsText = await res.text();
+          } catch(e2) {}
+        }
+
+        if (robotsText) {
+          // Parse user-agent blocks
+          const lines = robotsText.split('\n').map(l => l.trim());
+          let currentAgents = [];
+          const blockedAgents = new Set();
+
+          for (const line of lines) {
+            if (line.toLowerCase().startsWith('user-agent:')) {
+              const agent = line.split(':')[1].trim().toLowerCase();
+              currentAgents = [agent];
+            } else if (line.toLowerCase().startsWith('disallow:')) {
+              const path = line.split(':')[1].trim();
+              if (path === '/') {
+                currentAgents.forEach(a => blockedAgents.add(a));
+              }
+            } else if (line === '') {
+              currentAgents = [];
+            }
+          }
+
+          result.gptbot = !blockedAgents.has('gptbot');
+          result.claudebot = !blockedAgents.has('claudebot') && !blockedAgents.has('anthropic-ai');
+          result.googleExt = !blockedAgents.has('google-extended');
+          result.pplxbot = !blockedAgents.has('perplexitybot');
+
+          // If '*' is blocked, all are blocked
+          if (blockedAgents.has('*')) {
+            result.gptbot = false; result.claudebot = false; result.googleExt = false; result.pplxbot = false;
+          }
+        }
+      } catch(e) {}
+
+      // Fetch sitemap.xml
+      try {
+        const sitemapUrl = origin + '/sitemap.xml';
+        let sitemapText = '';
+        try {
+          const res = await fetch(PROXY_SERVER + encodeURIComponent(sitemapUrl));
+          if (res.ok) { const d = await res.json(); sitemapText = d.contents || ''; }
+        } catch(e) {
+          try {
+            const res = await fetch(sitemapUrl);
+            if (res.ok) sitemapText = await res.text();
+          } catch(e2) {}
+        }
+
+        if (sitemapText && sitemapText.includes('<urlset')) {
+          result.sitemapFound = true;
+          // Check if current URL appears in sitemap
+          try {
+            const slug = new URL(url).pathname;
+            result.inSitemap = sitemapText.includes(slug) || sitemapText.includes(encodeURIComponent(slug));
+          } catch(e) {}
+        }
+      } catch(e) {}
+
+      return result;
+    }
+
+    /* ============================================================
        AUDIT ENGINE
        ============================================================ */
     async function runAudit() {
@@ -1125,7 +1396,14 @@
         await delay(500);
         const accessScore = analyseAccessibility(doc, rawHTML, issues, passing);
         const evidenceScore = analyseEvidence(doc, issues, passing);
+        const eeatScore = analyseEEAT(doc, issues, passing);
+        analyseFAQ(doc, issues, passing);
+        const readabilityData = calcReadability(doc);
+        window.auditReadability = readabilityData;
         markStep('step-d', 'done');
+
+        // Fetch robots + sitemap asynchronously (non-blocking)
+        checkRobotsAndSitemap(url).then(rd => { window.auditRobotsData = rd; }).catch(() => {});
 
         // Compute scores dynamically
         const isHomepage = url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 1 || (url.endsWith('/') && url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 2);
@@ -1134,10 +1412,10 @@
         const isWorkhuman = url.includes('workhuman.com') && isHomepage;
         const isAchievers = url.includes('achievers.com') && isHomepage;
 
-        let finalScore = Math.max(10, Math.min(100, Math.round((structScore + payloadScore + schemaScore + accessScore + evidenceScore) / 125 * 100)));
-        let geminiScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*30) + (structScore/25*25) + (payloadScore/25*20) + (schemaScore/25*15) + (accessScore/25*10))));
-        let claudeScore = Math.max(15, Math.min(100, Math.round((structScore/25*35) + (evidenceScore/25*30) + (accessScore/25*20) + (payloadScore/25*10) + (schemaScore/25*5))));
-        let pplxScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*35) + (accessScore/25*25) + (payloadScore/25*25) + (schemaScore/25*10) + (structScore/25*5))));
+        let finalScore = Math.max(10, Math.min(100, Math.round((structScore + payloadScore + schemaScore + accessScore + evidenceScore + eeatScore) / 150 * 100)));
+        let geminiScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*28) + (structScore/25*22) + (eeatScore/25*15) + (payloadScore/25*20) + (schemaScore/25*10) + (accessScore/25*5))));
+        let claudeScore = Math.max(15, Math.min(100, Math.round((structScore/25*30) + (evidenceScore/25*25) + (eeatScore/25*15) + (accessScore/25*20) + (payloadScore/25*10))));
+        let pplxScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*32) + (accessScore/25*22) + (payloadScore/25*23) + (eeatScore/25*13) + (schemaScore/25*10))));
 
         const visibleText = doc.body ? (doc.body.innerText || doc.body.textContent || '') : '';
         const wordCount = visibleText.trim().split(/\s+/).filter(Boolean).length || 800;
@@ -1220,8 +1498,18 @@
         window.auditRawHTML = rawHTML;
         window.auditIssues = issues;
         window.auditPassing = passing;
+        window.auditDimScores = { structScore, payloadScore, schemaScore, accessScore, evidenceScore, eeatScore };
 
-        renderDashboard(url, isHomepage, finalScore, geminiScore, claudeScore, pplxScore, structuralSymmetry, shadowGapCount, wordCountDisplay, totalOverheadTokens, subtotalTokens, netBillTokens, currentCost, targetCost, changeRatio, subtotalVizzex, promptCachingDiscount, netVizzexTokens, monthlyVolume10kCurrent, monthlyVolume10kOptimized, monthlyVolume100kCurrent, monthlyVolume100kOptimized);
+        renderDashboard(url, isHomepage, finalScore, geminiScore, claudeScore, pplxScore, structuralSymmetry, shadowGapCount, wordCountDisplay, totalOverheadTokens, subtotalTokens, netBillTokens, currentCost, targetCost, changeRatio, subtotalVizzex, promptCachingDiscount, netVizzexTokens, monthlyVolume10kCurrent, monthlyVolume10kOptimized, monthlyVolume100kCurrent, monthlyVolume100kOptimized, eeatScore);
+
+        // Save to history
+        try {
+          const historyKey = 'ai_audit_history';
+          const existing = JSON.parse(localStorage.getItem(historyKey) || '[]');
+          const entry = { url, date: new Date().toISOString(), finalScore, geminiScore, claudeScore, pplxScore, issueCount: issues.length };
+          const updated = [entry, ...existing.filter(e => e.url !== url)].slice(0, 20);
+          localStorage.setItem(historyKey, JSON.stringify(updated));
+        } catch(e) {}
 
       } catch(e) {
         document.getElementById('loading').style.display = 'none';
@@ -1230,7 +1518,7 @@
       }
     }
 
-    function renderDashboard(url, isHomepage, finalScore, geminiScore, claudeScore, pplxScore, structuralSymmetry, shadowGapCount, wordCountDisplay, totalOverheadTokens, subtotalTokens, netBillTokens, currentCost, targetCost, changeRatio, subtotalVizzex, promptCachingDiscount, netVizzexTokens, monthlyVolume10kCurrent, monthlyVolume10kOptimized, monthlyVolume100kCurrent, monthlyVolume100kOptimized) {
+    function renderDashboard(url, isHomepage, finalScore, geminiScore, claudeScore, pplxScore, structuralSymmetry, shadowGapCount, wordCountDisplay, totalOverheadTokens, subtotalTokens, netBillTokens, currentCost, targetCost, changeRatio, subtotalVizzex, promptCachingDiscount, netVizzexTokens, monthlyVolume10kCurrent, monthlyVolume10kOptimized, monthlyVolume100kCurrent, monthlyVolume100kOptimized, eeatScore) {
       const resultsDiv = document.getElementById('results');
       resultsDiv.style.display = 'block';
 
@@ -1973,7 +2261,225 @@
         `;
       }
 
+      // ---- Build E-E-A-T panel rows ----
+      const eeatSignals = window.auditEEATSignals || {};
+      const eeatRows = [
+        { label: 'Author Attribution', pass: eeatSignals.hasAuthor, fix: 'Add a visible author byline with name, photo, and title.' },
+        { label: 'Publication Date', pass: eeatSignals.hasDate, fix: 'Add a visible publish date and keep it updated.' },
+        { label: 'Authoritative Links', pass: (eeatSignals.authLinkCount || 0) >= 2, fix: `Link out to ≥2 authoritative sources. Found: ${eeatSignals.authLinkCount || 0}.` },
+        { label: 'Author Credentials', pass: eeatSignals.hasCredentials, fix: 'Mention the author\'s qualifications in the bio or byline.' },
+        { label: 'Last-Modified Date', pass: eeatSignals.hasModified, fix: 'Show a \'Last updated\' date and add dateModified to schema.' },
+      ];
+      const eeatPanelHTML = `
+        <div class="bill-card fade-in">
+          <div class="bill-title">🎓 E-E-A-T Signals (${eeatScore !== undefined ? eeatScore : '?'}/25)</div>
+          <div class="bill-subtitle">Experience, Expertise, Authoritativeness, Trustworthiness signals detected on-page</div>
+          <div class="issues-list" style="margin-top:16px;">
+            ${eeatRows.map(r => `
+              <div class="issue-item" style="grid-template-columns:auto 1fr auto;">
+                <span class="issue-sev ${r.pass ? 'status-clear' : 'sev-medium'}" style="font-size:11px;padding:3px 10px;">${r.pass ? 'PASS' : 'FAIL'}</span>
+                <div>
+                  <div class="issue-name">${r.label}</div>
+                  ${!r.pass ? `<div class="issue-fix" style="margin-top:4px;"><strong>Fix:</strong> ${r.fix}</div>` : '<div class="issue-desc" style="color:var(--emerald);">Signal present ✓</div>'}
+                </div>
+                <span style="font-size:18px;">${r.pass ? '✅' : '❌'}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      // ---- Build Readability panel ----
+      const rd = window.auditReadability || { fk: 0, label: 'N/A', wps: 0 };
+      const rdColor = rd.fk >= 60 ? 'var(--emerald)' : rd.fk >= 50 ? 'var(--amber)' : 'var(--rose)';
+      const rdVerdict = rd.fk >= 60 ? 'Ideal for AI citation (Grade 7–9 range)' : rd.fk >= 50 ? 'Acceptable — consider simplifying sentences' : 'Too complex — AI readers prefer simpler prose';
+      const readabilityPanelHTML = `
+        <div class="bill-card fade-in">
+          <div class="bill-title">📖 Readability Score (Flesch-Kincaid)</div>
+          <div class="bill-subtitle">Estimates how easily AI and human readers can parse your content</div>
+          <div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap;margin-top:16px;">
+            <div style="text-align:center;">
+              <div style="font-size:56px;font-weight:900;color:${rdColor};line-height:1;">${rd.fk}</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:4px;">FK Score (0–100)</div>
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <div style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:8px;">${rd.label}</div>
+              <div style="font-size:13px;color:${rdColor};margin-bottom:6px;">${rdVerdict}</div>
+              <div style="font-size:12px;color:var(--text-3);">Avg words per sentence: <strong style="color:var(--text-1);">${rd.wps}</strong></div>
+              <div style="font-size:11px;color:var(--text-4);margin-top:6px;">Target: FK 60–70 (Grade 8–9). Higher = easier to read.</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // ---- Build FAQ panel ----
+      const faqData = window.auditFAQData || { hasFAQSchema: false, questionCount: 0, accordionCount: 0 };
+      const faqPanelHTML = `
+        <div class="bill-card fade-in">
+          <div class="bill-title">❓ FAQ / Q&A Detection</div>
+          <div class="bill-subtitle">AI models heavily sample Q&A content for direct answers — structure matters</div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;">
+            <div style="text-align:center;flex:1;min-width:100px;">
+              <div style="font-size:36px;font-weight:900;color:${faqData.questionCount > 0 ? 'var(--emerald)' : 'var(--rose)'};">${faqData.questionCount}</div>
+              <div style="font-size:12px;color:var(--text-3);">Question Headings</div>
+            </div>
+            <div style="text-align:center;flex:1;min-width:100px;">
+              <div style="font-size:36px;font-weight:900;color:${faqData.hasFAQSchema ? 'var(--emerald)' : 'var(--rose)'};">${faqData.hasFAQSchema ? '✓' : '✗'}</div>
+              <div style="font-size:12px;color:var(--text-3);">FAQPage Schema</div>
+            </div>
+            <div style="text-align:center;flex:1;min-width:100px;">
+              <div style="font-size:36px;font-weight:900;color:${faqData.accordionCount > 0 ? 'var(--emerald)' : 'var(--text-4)'};">${faqData.accordionCount}</div>
+              <div style="font-size:12px;color:var(--text-3);">Accordion Items</div>
+            </div>
+          </div>
+          ${faqData.questionCount === 0 && !faqData.hasFAQSchema ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:12px;color:#fbbf24;">Add 3–5 question-phrased H2/H3 headings (What/How/Why/When) and FAQPage JSON-LD schema to improve AI direct-answer eligibility.</div>` : ''}
+        </div>
+      `;
+
+      // ---- Build Radar Chart SVG ----
+      const dims = window.auditDimScores || {};
+      const dimValues = [
+        dims.structScore || 0,
+        dims.payloadScore || 0,
+        dims.schemaScore || 0,
+        dims.accessScore || 0,
+        dims.evidenceScore || 0
+      ];
+      const dimLabels = ['Structure', 'Payload', 'Schema', 'Access', 'Evidence'];
+      const centerX = 100, centerY = 100, maxR = 80;
+      function radarPoint(index, value) {
+        const angle = (Math.PI * 2 * index / 5) - Math.PI / 2;
+        const r = (value / 25) * maxR;
+        return { x: centerX + r * Math.cos(angle), y: centerY + r * Math.sin(angle) };
+      }
+      function axisPoint(index, r) {
+        const angle = (Math.PI * 2 * index / 5) - Math.PI / 2;
+        return { x: centerX + r * Math.cos(angle), y: centerY + r * Math.sin(angle) };
+      }
+      // Build axis lines
+      let axisLinesStr = '';
+      let gridStr = '';
+      let labelsStr = '';
+      for (let i = 0; i < 5; i++) {
+        const tip = axisPoint(i, maxR);
+        axisLinesStr += `<line x1="${centerX}" y1="${centerY}" x2="${tip.x.toFixed(1)}" y2="${tip.y.toFixed(1)}" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>`;
+        // Grid rings at 25/50/75/100%
+        for (const pct of [0.25, 0.5, 0.75, 1.0]) {
+          const gp = axisPoint(i, maxR * pct);
+          if (i > 0) {
+            const prev = axisPoint(i - 1, maxR * pct);
+            gridStr += `<line x1="${prev.x.toFixed(1)}" y1="${prev.y.toFixed(1)}" x2="${gp.x.toFixed(1)}" y2="${gp.y.toFixed(1)}" stroke="rgba(99,102,241,0.15)" stroke-width="0.5"/>`;
+          }
+        }
+        // Close grid rings
+        if (true) {
+          for (const pct of [0.25, 0.5, 0.75, 1.0]) {
+            const gp = axisPoint(i, maxR * pct);
+            const next = axisPoint((i + 1) % 5, maxR * pct);
+            gridStr += `<line x1="${gp.x.toFixed(1)}" y1="${gp.y.toFixed(1)}" x2="${next.x.toFixed(1)}" y2="${next.y.toFixed(1)}" stroke="rgba(99,102,241,0.15)" stroke-width="0.5"/>`;
+          }
+        }
+        // Labels
+        const lp = axisPoint(i, maxR + 18);
+        labelsStr += `<text x="${lp.x.toFixed(1)}" y="${(lp.y + 4).toFixed(1)}" text-anchor="middle" font-size="10" fill="rgba(203,213,225,0.8)" font-family="Outfit,sans-serif">${dimLabels[i]}</text>`;
+      }
+      // Data polygon
+      const dataPoints = dimValues.map((v, i) => radarPoint(i, v));
+      const polygonPoints = dataPoints.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      const radarSVG = `<svg viewBox="0 0 200 200" width="180" height="180" style="overflow:visible;">
+        ${gridStr}${axisLinesStr}
+        <polygon points="${polygonPoints}" fill="rgba(34,211,238,0.2)" stroke="#22d3ee" stroke-width="2"/>
+        ${dataPoints.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#22d3ee"/>`).join('')}
+        ${labelsStr}
+      </svg>`;
+
+      // ---- Build Priority Fix Roadmap ----
+      const sortedIssues = [...issues].sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts));
+      const teamBadgeStyle = 'display:inline-block;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px;';
+      const roadmapPanelHTML = issues.length > 0 ? `
+        <div class="bill-card fade-in">
+          <div class="bill-title">🎯 Priority Fix Roadmap — Highest ROI First</div>
+          <div class="bill-subtitle">Issues sorted by point impact. Fix top items first for maximum score gain.</div>
+          <ol style="margin-top:16px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px;">
+            ${sortedIssues.map((issue, i) => {
+              // Extract team badge from fix HTML if present
+              const teamMatch = issue.fix.match(/👤 Team: ([^<]+)<\/span>/);
+              const teamLabel = teamMatch ? teamMatch[1].trim() : '';
+              return `<li style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:8px;">
+                <span style="font-size:18px;font-weight:900;color:var(--indigo);min-width:28px;">${i + 1}.</span>
+                <div style="flex:1;">
+                  <span style="font-size:13px;font-weight:700;">${issue.name}</span>
+                  ${teamLabel ? `<span style="${teamBadgeStyle}">👤 ${teamLabel}</span>` : ''}
+                </div>
+                <span style="font-size:13px;font-weight:800;color:var(--rose);background:rgba(244,63,94,0.1);padding:2px 8px;border-radius:4px;white-space:nowrap;">${issue.pts} pts</span>
+              </li>`;
+            }).join('')}
+          </ol>
+        </div>
+      ` : '';
+
+      // ---- Build Crawler Access Check panel (uses window.auditRobotsData populated async) ----
+      // We render a placeholder; a live reload check is done after robots fetch completes
+      const robotsData = window.auditRobotsData || null;
+      const crawlerPanelHTML = `
+        <div class="bill-card fade-in" id="crawler-access-panel">
+          <div class="bill-title">🤖 Crawler Access Check</div>
+          <div class="bill-subtitle">Checks robots.txt for AI bot permissions and sitemap inclusion</div>
+          ${robotsData ? `
+          <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:16px;">
+            <thead><tr>
+              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-3);font-weight:700;font-size:11px;text-transform:uppercase;">Bot</th>
+              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-3);font-weight:700;font-size:11px;text-transform:uppercase;">Status</th>
+            </tr></thead>
+            <tbody>
+              ${[['GPTBot (ChatGPT)', robotsData.gptbot],['ClaudeBot (Anthropic)', robotsData.claudebot],['Google-Extended (Gemini)', robotsData.googleExt],['PerplexityBot', robotsData.pplxbot]].map(([name, allowed]) => `
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.02);">
+                <td style="padding:10px;">${name}</td>
+                <td style="padding:10px;"><span style="padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;background:${allowed ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'};color:${allowed ? '#34d399' : '#f87171'};border:1px solid ${allowed ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.25)'};">${allowed ? 'ALLOWED' : 'BLOCKED'}</span></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border-radius:8px;font-size:12px;color:var(--text-2);">
+            Sitemap: ${robotsData.sitemapFound ? `<span style="color:var(--emerald);">Found</span>` : `<span style="color:var(--rose);">Not found at /sitemap.xml</span>`}
+            &nbsp;|&nbsp;
+            URL in sitemap: ${robotsData.inSitemap ? `<span style="color:var(--emerald);">Yes ✓</span>` : `<span style="color:var(--amber);">Not detected</span>`}
+          </div>
+          ` : `<div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;font-size:12px;color:var(--text-3);">Fetching robots.txt… (checking in background — refresh the panel to see results)</div>`}
+        </div>
+      `;
+
+      // ---- Build Recent Audits panel ----
+      let historyPanelHTML = '';
+      try {
+        const historyKey = 'ai_audit_history';
+        const hist = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        if (hist.length >= 2) {
+          const recent = hist.slice(0, 5);
+          historyPanelHTML = `
+            <div class="history-section fade-in">
+              <details>
+                <summary class="history-toggle">📊 Recent Audits (${hist.length} saved)</summary>
+                <div style="margin-top:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;">
+                  <table class="history-table">
+                    <thead><tr><th>URL</th><th>Date</th><th>Score</th><th>Issues</th></tr></thead>
+                    <tbody>
+                      ${recent.map(e => `<tr>
+                        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;">${(e.url || '').slice(0, 50)}${(e.url || '').length > 50 ? '…' : ''}</td>
+                        <td>${e.date ? new Date(e.date).toLocaleDateString() : ''}</td>
+                        <td><strong style="color:${(e.finalScore || 0) >= 70 ? 'var(--emerald)' : (e.finalScore || 0) >= 45 ? 'var(--amber)' : 'var(--rose)'};">${e.finalScore || 0}%</strong></td>
+                        <td>${e.issueCount || 0}</td>
+                      </tr>`).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            </div>
+          `;
+        }
+      } catch(e) {}
+
       resultsDiv.innerHTML = `
+        ${historyPanelHTML}
         ${isDemoMode ? `<div style="background:#fbbf24;color:#1a1a1a;padding:10px 18px;border-radius:8px;margin-bottom:18px;font-size:13px;font-weight:600;letter-spacing:0.02em;">⚡ Demo Mode — Pre-loaded benchmark data for this domain. Enter a different URL above for a live audit.</div>` : ''}
         <!-- Engine Status -->
         <div class="official-header fade-in">
@@ -1995,7 +2501,7 @@
         </div>
 
         <!-- Master Score Display -->
-        <div class="results-header fade-in">
+        <div class="results-header fade-in" style="grid-template-columns: auto auto 1fr;">
           <div class="score-wrap">
             <svg class="score-svg" viewBox="0 0 140 140">
               <circle class="score-bg" cx="70" cy="70" r="60"/>
@@ -2007,6 +2513,7 @@
               <span class="score-grade">${finalScore}%</span>
             </div>
           </div>
+          <div class="radar-wrap" style="padding:0 16px;">${radarSVG}</div>
           <div class="results-meta">
             <h2>AI Citation Readiness Audit Result</h2>
             <div class="url-display">→ ${url}</div>
@@ -2091,6 +2598,21 @@
           <div class="bill-subtitle">This page is well-optimised for AI citation readiness</div>
         </div>
         `}
+
+        <!-- E-E-A-T Signals -->
+        ${eeatPanelHTML}
+
+        <!-- Readability Score -->
+        ${readabilityPanelHTML}
+
+        <!-- FAQ Detection -->
+        ${faqPanelHTML}
+
+        <!-- Priority Fix Roadmap -->
+        ${roadmapPanelHTML}
+
+        <!-- Crawler Access Check -->
+        ${crawlerPanelHTML}
 
         <!-- AI Inference Bill -->
         <div class="bill-card fade-in">
@@ -2454,6 +2976,10 @@
             </div>
           </div>
 
+        </div>
+
+        <div style="text-align:center;margin:24px 0 8px;">
+          <button onclick="window.print()" class="btn-export-pdf">⬇ Download PDF Report</button>
         </div>
 
         <div class="rescan-row fade-in">
