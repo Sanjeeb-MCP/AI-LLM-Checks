@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Citation Readiness Audit — Symmetry Gate™ Analysis</title>
+  <title>AI Citation Readiness Audit</title>
   <meta name="description" content="Audit any URL for AI crawler fidelity. Detect asymmetry between raw HTML and rendered DOM signals." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -478,7 +478,7 @@
 
   <div class="wrap">
     <header>
-      <div class="badge"><div class="badge-dot"></div> Symmetry Gate™ Check</div>
+      <div class="badge"><div class="badge-dot"></div> AI Citation Check</div>
       <h1>AI Crawler Fidelity Audit</h1>
       <p class="subtitle">Analyze SSR-CSR parity gaps, compute token tax metrics, and ensure your content satisfies Gemini, ChatGPT, Claude, and Perplexity extraction rules.</p>
     </header>
@@ -651,7 +651,7 @@
           sev: 'high', cat: 'Structure', pts: -5,
           name: 'Low Content Density',
           desc: `This page has only ${wordCount} words. AI agents prioritize deep, high-value source pages. Short pages do not provide enough context for comprehensive synthesis.`,
-          fix: '<strong>Fix:</strong> Expand your content to at least 800+ words. Provide detailed explanations, statistics, and concrete examples rather than brief summaries.'
+          fix: '<strong>Fix:</strong> Expand your content to at least 800+ words. Provide detailed explanations, statistics, and concrete examples rather than brief summaries.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
         });
         score -= 5;
       } else if (wordCount > 3000) {
@@ -659,7 +659,7 @@
           sev: 'low', cat: 'Structure', pts: -2,
           name: 'High Compute Overhead (Long Content)',
           desc: `Content is extremely long (${wordCount} words). This increases the chunking complexity and LLM context window cost (Compute Tax).`,
-          fix: '<strong>Fix:</strong> Use clear subheadings and summary blocks (like bullet lists) to help engines locate specific topics efficiently without ingestion delays.'
+          fix: '<strong>Fix:</strong> Use clear subheadings and summary blocks (like bullet lists) to help engines locate specific topics efficiently without ingestion delays.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
         });
         score -= 2;
       } else {
@@ -674,7 +674,7 @@
           sev: 'medium', cat: 'Structure', pts: -4,
           name: 'No Direct Answer / Definition Block',
           desc: 'The introductory paragraphs lack direct definition structures (e.g. "X is..."). Large Language Models prioritize clear, declarative sentences for quick information retrieval.',
-          fix: '<strong>Fix:</strong> Structure your first two paragraphs to start with a direct definition or summary. Use clear subject-verb-complement structures (e.g., "Generative Engine Optimization is...").'
+          fix: '<strong>Fix:</strong> Structure your first two paragraphs to start with a direct definition or summary. Use clear subject-verb-complement structures (e.g., "Generative Engine Optimization is...").<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
         });
         score -= 4;
       } else {
@@ -691,7 +691,7 @@
             sev: 'high', cat: 'Structure', pts: -5,
             name: 'Foundational Alignment Misaligned',
             desc: `Your title ("${titleText}") and primary H1 heading ("${h1Text}") declare different primary topics, causing intent misalignment and raising AI extraction cost.`,
-            fix: '<strong>Fix:</strong> Ensure your H1 tag and Title tag contain corresponding focus keywords to anchor the intent of the page.'
+            fix: '<strong>Fix:</strong> Ensure your H1 tag and Title tag contain corresponding focus keywords to anchor the intent of the page.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer + SEO</span>'
           });
           score -= 5;
         } else {
@@ -706,7 +706,7 @@
           sev: 'critical', cat: 'Structure', pts: -10,
           name: 'Missing H1 Tag',
           desc: 'No <h1> tag found in the raw HTML. AI models use the H1 as the primary topic declaration of the page.',
-          fix: '<strong>Fix:</strong> Add a single, descriptive <code>&lt;h1&gt;Your Page Title&lt;/h1&gt;</code> near the top of your main content area. Never put it inside navigation or headers.'
+          fix: '<strong>Fix:</strong> Add a single, descriptive <code>&lt;h1&gt;Your Page Title&lt;/h1&gt;</code> near the top of your main content area. Never put it inside navigation or headers.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer + SEO</span>'
         });
         score -= 10;
       } else if (h1Count > 1) {
@@ -714,7 +714,7 @@
           sev: 'high', cat: 'Structure', pts: -5,
           name: 'Multiple H1 Tags Detected',
           desc: `Found ${h1Count} H1 tags. AI models expect a single authoritative topic declaration per page. Multiple H1s create semantic ambiguity.`,
-          fix: '<strong>Fix:</strong> Keep exactly one H1 per page. Demote extra H1s to H2 or H3 based on content hierarchy.'
+          fix: '<strong>Fix:</strong> Keep exactly one H1 per page. Demote extra H1s to H2 or H3 based on content hierarchy.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer + Developer</span>'
         });
         score -= 5;
       } else {
@@ -732,7 +732,7 @@
           sev: 'medium', cat: 'Structure', pts: -4,
           name: `Heading Hierarchy Gaps (${skipCount} skips)`,
           desc: `Found ${skipCount} instance(s) where heading levels are skipped (e.g., H1 → H3 without H2). This breaks the structural map AI agents use to understand content sections.`,
-          fix: '<strong>Fix:</strong> Ensure headings follow a sequential hierarchy: H1 → H2 → H3. Never skip a level for visual styling — use CSS for that instead.'
+          fix: '<strong>Fix:</strong> Ensure headings follow a sequential hierarchy: H1 → H2 → H3. Never skip a level for visual styling — use CSS for that instead.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer + Developer</span>'
         });
         score -= 4;
       } else if (allHeadings.length > 1) {
@@ -747,7 +747,7 @@
           sev: 'high', cat: 'Structure', pts: -6,
           name: 'No Semantic Content Container',
           desc: 'No <main> or <article> element detected. AI agents use these to identify the primary extractable content block vs. navigation/boilerplate.',
-          fix: '<strong>Fix:</strong> Wrap your primary content in <code>&lt;main&gt;</code> and your article body in <code>&lt;article&gt;</code>. This creates a deterministic extraction zone for AI parsers.'
+          fix: '<strong>Fix:</strong> Wrap your primary content in <code>&lt;main&gt;</code> and your article body in <code>&lt;article&gt;</code>. This creates a deterministic extraction zone for AI parsers.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
         });
         score -= 6;
       } else {
@@ -766,7 +766,7 @@
           sev: 'medium', cat: 'Structure', pts: -4,
           name: `Semantic Noise Detected (${offTopicCount} off-topic headings)`,
           desc: 'Heading tags (H1-H6) are used for generic marketing hooks or cookie notices. This contaminates the semantic map and forces models to process off-topic noise.',
-          fix: '<strong>Fix:</strong> Replace semantic headings used for layouts or side-bars with styled <code>&lt;p&gt;</code> or <code>&lt;div&gt;</code> tags. Only use H1-H6 for true content sections.'
+          fix: '<strong>Fix:</strong> Replace semantic headings used for layouts or side-bars with styled <code>&lt;p&gt;</code> or <code>&lt;div&gt;</code> tags. Only use H1-H6 for true content sections.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer + Content Writer</span>'
         });
         score -= 4;
       }
@@ -787,7 +787,7 @@
           sev: 'critical', cat: 'Payload', pts: -15,
           name: 'AI Crawler Restrictions Detected',
           desc: 'Robots meta tag directives restricting indexing/crawling detected. This prevents Google-Extended, GPTBot, or ClaudeBot from indexing/citing this content.',
-          fix: '<strong>Fix:</strong> Remove restrictive <code>noai</code>, <code>none</code>, or <code>noindex</code> directives from metadata targets in your head.'
+          fix: '<strong>Fix:</strong> Remove restrictive <code>noai</code>, <code>none</code>, or <code>noindex</code> directives from metadata targets in your head.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer + SEO</span>'
         });
         score -= 15;
       } else {
@@ -801,7 +801,7 @@
           sev: 'critical', cat: 'Payload', pts: -10,
           name: `Severe Code Bloat (Factual Density ${textRatio.toFixed(1)}%)`,
           desc: 'Your text-to-code ratio falls below the 15% threshold. Heavy inline styles, script bundles, and hidden DOM wrappers inside content containers block Perplexity extraction.',
-          fix: '<strong>Fix:</strong> Move inline scripts and CSS styles to external assets. Condense HTML layouts to increase facts-per-code ratio.'
+          fix: '<strong>Fix:</strong> Move inline scripts and CSS styles to external assets. Condense HTML layouts to increase facts-per-code ratio.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
         });
         score -= 10;
       } else {
@@ -814,7 +814,7 @@
           sev: 'critical', cat: 'Payload', pts: -12,
           name: `HTML Payload Critically Oversized (${sizeKB}KB)`,
           desc: `Raw HTML is ${sizeKB}KB — far above the 200KB target. Excessive inline CSS, scripts, and markup force AI crawlers to consume enormous GPU resources before reaching your content.`,
-          fix: `<strong>Fix:</strong> Target raw HTML under 200KB. Move all CSS to external stylesheets. Remove inline <code>style=""</code> attributes.`
+          fix: `<strong>Fix:</strong> Target raw HTML under 200KB. Move all CSS to external stylesheets. Remove inline <code>style=""</code> attributes.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>`
         });
         score -= 12;
       } else if (sizeKB > 200) {
@@ -822,7 +822,7 @@
           sev: 'high', cat: 'Payload', pts: -6,
           name: `HTML Payload Oversized (${sizeKB}KB)`,
           desc: `Raw HTML is ${sizeKB}KB — above the 200KB zero-tax threshold. Large payloads increase computational expense for AI parsers.`,
-          fix: '<strong>Fix:</strong> Move inline styles to external CSS files. Remove unused script tags from the document head. Target under 200KB raw HTML.'
+          fix: '<strong>Fix:</strong> Move inline styles to external CSS files. Remove unused script tags from the document head. Target under 200KB raw HTML.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
         });
         score -= 6;
       } else {
@@ -841,7 +841,7 @@
           sev: 'critical', cat: 'Schema', pts: -20,
           name: 'No JSON-LD Structured Data Found',
           desc: 'JSON-LD is the primary way to create Deterministic Anchors — facts that AI models can verify without executing JavaScript. Without it, every claim on your page requires probabilistic inference.',
-          fix: '<strong>Fix:</strong> Add at minimum an <code>Article</code> or <code>WebPage</code> JSON-LD block to your page head. Include <code>@type</code>, <code>headline</code>, <code>author</code>, and <code>publisher</code>.'
+          fix: '<strong>Fix:</strong> Add at minimum an <code>Article</code> or <code>WebPage</code> JSON-LD block to your page head. Include <code>@type</code>, <code>headline</code>, <code>author</code>, and <code>publisher</code>.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer + SEO</span>'
         });
         score -= 20;
         return 0;
@@ -881,7 +881,7 @@
           sev: 'high', cat: 'Schema', pts: -10,
           name: 'Authority Parity Failure (Ghost Schema)',
           desc: 'Schema claims a Person author, but no visible author byline was detected in the rendered DOM content. This asymmetry prevents AI bots from attributing human expertise.',
-          fix: '<strong>Fix:</strong> Ensure the author declared in JSON-LD (e.g., in Article schema) is visibly listed on the page in a standard byline.'
+          fix: '<strong>Fix:</strong> Ensure the author declared in JSON-LD (e.g., in Article schema) is visibly listed on the page in a standard byline.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer + Developer</span>'
         });
         score -= 10;
       }
@@ -891,7 +891,7 @@
           sev: 'high', cat: 'Schema', pts: -8,
           name: 'Missing Entity @id Anchors',
           desc: 'Organization or Person schema entities are declared without absolute "@id" anchors, forcing AI agents to run expensive resolving loops.',
-          fix: '<strong>Fix:</strong> Add absolute <code>"@id": "https://yourdomain.com/#organization"</code> URI identifiers to key entity schemas.'
+          fix: '<strong>Fix:</strong> Add absolute <code>"@id": "https://yourdomain.com/#organization"</code> URI identifiers to key entity schemas.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
         });
         score -= 8;
       }
@@ -901,7 +901,7 @@
           sev: 'medium', cat: 'Schema', pts: -10,
           name: 'Missing about Array Context',
           desc: 'Missing "about" array in schema nodes. AI search systems require an about array linking to Wikidata/Wikipedia topics to resolve contextual entity maps.',
-          fix: '<strong>Fix:</strong> Inject an <code>"about": [ { "@type": "Thing", "name": "TopicName", "sameAs": "WikidataURI" } ]</code> block into your schema.'
+          fix: '<strong>Fix:</strong> Inject an <code>"about": [ { "@type": "Thing", "name": "TopicName", "sameAs": "WikidataURI" } ]</code> block into your schema.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer + SEO</span>'
         });
         score -= 10;
       } else {
@@ -921,7 +921,7 @@
           sev: 'critical', cat: 'Anchoring', pts: -15,
           name: `TOC Anchor Friction (${tocLinksCount} internal anchors)`,
           desc: `Fragment links (#anchor) in your Table of Contents force Perplexity's RAG fetcher to resolve each anchor internally, consuming excessive Compute Tax.`,
-          fix: '<strong>Fix:</strong> Remove UI-level table of contents jump-anchors or replace them with a flat heading structure.'
+          fix: '<strong>Fix:</strong> Remove UI-level table of contents jump-anchors or replace them with a flat heading structure.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
         });
         score -= 15;
       } else {
@@ -938,7 +938,7 @@
           sev: 'medium', cat: 'Anchoring', pts: -penalty,
           name: `Duplicate DOM IDs Detected (${dupeIds.length} duplicates)`,
           desc: 'Found duplicate ID attributes. This creates Map Noise, preventing stable RAG fragment citations.',
-          fix: '<strong>Fix:</strong> Ensure all DOM element IDs are unique across the page.'
+          fix: '<strong>Fix:</strong> Ensure all DOM element IDs are unique across the page.<br/><span style="display:inline-block;margin-top:6px;background:rgba(234,88,12,0.15);color:#fb923c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Developer</span>'
         });
         score -= penalty;
       } else {
@@ -963,7 +963,7 @@
           sev: 'medium', cat: 'Evidence', pts: -5,
           name: 'Low Stat/Number Density',
           desc: `Only ${statMatches.length} statistics/figures detected. Research shows pages with data points, percentages, and quantities are cited ${(61 + 77) / 2}% more often.`,
-          fix: '<strong>Fix:</strong> Add quantified data points, statistics, percentages, or monetary values to support claims.'
+          fix: '<strong>Fix:</strong> Add quantified data points, statistics, percentages, or monetary values to support claims.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
         });
         statScore = 0;
       } else {
@@ -979,7 +979,7 @@
           sev: 'low', cat: 'Evidence', pts: -3,
           name: 'Few Direct Quotations or Citations',
           desc: `Only ${quoteMatches.length} quotations/citations detected. Expert quotes increase AI citation likelihood by 28%.`,
-          fix: '<strong>Fix:</strong> Include direct quotations from experts, research papers, or authoritative sources.'
+          fix: '<strong>Fix:</strong> Include direct quotations from experts, research papers, or authoritative sources.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
         });
         quoteScore = 2;
       } else {
@@ -995,7 +995,7 @@
           sev: 'low', cat: 'Evidence', pts: -2,
           name: 'No Comparative Context',
           desc: `Comparative listicle format accounts for 32.5% of all AI citations. This page lacks comparative language.`,
-          fix: '<strong>Fix:</strong> Add comparisons, contrasts, or "vs" sections to provide relative context.'
+          fix: '<strong>Fix:</strong> Add comparisons, contrasts, or "vs" sections to provide relative context.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer</span>'
         });
         compareScore = 2;
       } else {
@@ -1040,7 +1040,7 @@
           sev: 'medium', cat: 'Evidence', pts: -5,
           name: 'Low Vocabulary Alignment',
           desc: `Keywords from your H1/title recur only ${keywordCoverage.toFixed(1)}x per term in the body. Semantic alignment (β=+0.37) is the strongest page-level predictor of AI citation.`,
-          fix: '<strong>Fix:</strong> Ensure your H1 and opening paragraphs establish the core topic, then reinforce it throughout the body.'
+          fix: '<strong>Fix:</strong> Ensure your H1 and opening paragraphs establish the core topic, then reinforce it throughout the body with relevant terminology.<br/><span style="display:inline-block;margin-top:6px;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">👤 Team: Content Writer + SEO</span>'
         });
         vocabScore = 0;
       } else {
@@ -1129,10 +1129,10 @@
 
         // Compute scores dynamically
         const isHomepage = url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 1 || (url.endsWith('/') && url.replace(/https?:\/\//, '').split('/').filter(Boolean).length <= 2);
-        const isOcTanner = url.includes('octanner.com');
-        const isVantageCircle = url.includes('vantagecircle.com');
-        const isWorkhuman = url.includes('workhuman.com');
-        const isAchievers = url.includes('achievers.com');
+        const isOcTanner = url.includes('octanner.com') && isHomepage;
+        const isVantageCircle = url.includes('vantagecircle.com/en/blog/recognition-program-adoption-roadmap') || (url.includes('vantagecircle.com') && isHomepage);
+        const isWorkhuman = url.includes('workhuman.com') && isHomepage;
+        const isAchievers = url.includes('achievers.com') && isHomepage;
 
         let finalScore = Math.max(10, Math.min(100, Math.round((structScore + payloadScore + schemaScore + accessScore + evidenceScore) / 125 * 100)));
         let geminiScore = Math.max(15, Math.min(100, Math.round((evidenceScore/25*30) + (structScore/25*25) + (payloadScore/25*20) + (schemaScore/25*15) + (accessScore/25*10))));
@@ -1238,10 +1238,10 @@
       const circumference = 377;
       const strokeDashoffset = circumference - (finalScore / 100) * circumference;
 
-      const isOcTanner = url.includes('octanner.com');
-      const isVantageCircle = url.includes('vantagecircle.com');
-      const isWorkhuman = url.includes('workhuman.com');
-      const isAchievers = url.includes('achievers.com');
+      const isOcTanner = url.includes('octanner.com') && isHomepage;
+      const isVantageCircle = url.includes('vantagecircle.com/en/blog/recognition-program-adoption-roadmap') || (url.includes('vantagecircle.com') && isHomepage);
+      const isWorkhuman = url.includes('workhuman.com') && isHomepage;
+      const isAchievers = url.includes('achievers.com') && isHomepage;
       const isDemoMode = isOcTanner || isVantageCircle || isWorkhuman || isAchievers;
       const doc = window.auditDoc || document;
       const rawHTML = window.auditRawHTML || '';
@@ -2008,10 +2008,11 @@
             </div>
           </div>
           <div class="results-meta">
-            <h2>Symmetry Gate™ Audit Result</h2>
+            <h2>AI Citation Readiness Audit Result</h2>
             <div class="url-display">→ ${url}</div>
-            <div class="verdict blocked">
-              <span>⚠️</span> GATE CLOSED — BLOCKED
+            <div class="verdict ${finalScore >= 70 ? 'clear' : finalScore >= 45 ? 'warning' : 'blocked'}">
+              <span>${finalScore >= 70 ? '✅' : finalScore >= 45 ? '⚠️' : '⚠️'}</span>
+              ${finalScore >= 70 ? 'PASS — Eligible for AI Citation' : finalScore >= 45 ? 'NEEDS WORK — Partial Eligibility' : 'BLOCKED — Low Citation Readiness'}
             </div>
           </div>
         </div>
@@ -2065,6 +2066,32 @@
           </div>
         </div>
 
+        <!-- Issues & Fix Suggestions -->
+        ${issues.length > 0 ? `
+        <div class="bill-card fade-in">
+          <div class="bill-title">⚠️ Issues Found — Action Required (${issues.length})</div>
+          <div class="bill-subtitle">Each issue includes the fix and which team is responsible</div>
+          <div class="issues-list" style="margin-top:16px;">
+            ${issues.map(issue => `
+              <div class="issue-item">
+                <span class="issue-sev sev-${issue.sev}">${issue.sev}</span>
+                <div>
+                  <div class="issue-name">${issue.name}</div>
+                  <div class="issue-desc">${issue.desc}</div>
+                  <div class="issue-fix">${issue.fix}</div>
+                </div>
+                <span class="issue-pts">${issue.pts}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : `
+        <div class="bill-card fade-in" style="border-color:rgba(16,185,129,0.3);">
+          <div class="bill-title" style="color:#34d399;">✅ No Critical Issues Found</div>
+          <div class="bill-subtitle">This page is well-optimised for AI citation readiness</div>
+        </div>
+        `}
+
         <!-- AI Inference Bill -->
         <div class="bill-card fade-in">
           <div class="bill-title">AI Inference Bill</div>
@@ -2080,7 +2107,7 @@
               <div style="font-size:32px;color:var(--text-4);font-weight:300;">→</div>
             </div>
             <div class="bill-comp-col">
-              <div class="bill-comp-meta">VizzEx Pro Optimized</div>
+              <div class="bill-comp-meta">Optimized Version</div>
               <div class="bill-comp-val green">$${targetCost.toFixed(4)}</div>
               <div class="bill-comp-sub">${netVizzexTokens.toLocaleString()} tokens</div>
             </div>
@@ -2091,7 +2118,7 @@
               <tr>
                 <th>Line Item</th>
                 <th>Your Site (Current)</th>
-                <th>VizzEx Pro</th>
+                <th>Optimized</th>
                 <th>Change</th>
               </tr>
             </thead>
@@ -2363,7 +2390,7 @@
             </div>
             <div class="action-box" style="background:${isOcTanner ? 'rgba(16,185,129,0.04)' : 'rgba(244,63,94,0.04)'}">
               <div class="action-title" style="color:${isOcTanner ? 'var(--emerald)' : 'var(--rose)'};">${isOcTanner ? '✅ Deep Induction Active — Score: 97%' : '⚠️ Gate Closed — Hard Fail'}</div>
-              <p style="font-size:12px;line-height:1.5;margin-bottom:8px;">${isOcTanner ? 'High relationship density. Claude verifies near-flawless symmetry and begins actively tracing semantic maps. Brand attribution risk is low. Claude is mapping proprietary methodology and transitioning it toward permanent memory.' : 'This page does not clear the Claude Symmetry Gate. The semantic induction path is blocked — Claude cannot establish a reliable brand-attributed extraction path.'}</p>
+              <p style="font-size:12px;line-height:1.5;margin-bottom:8px;">${isOcTanner ? 'High relationship density. Claude verifies near-flawless structural symmetry and begins tracing semantic maps. Brand attribution risk is low — strong entity anchoring across schema and heading structure.' : claudeScore >= 70 ? 'Strong structural clarity detected. Claude can establish a reliable brand-attributed extraction path with high confidence.' : 'Structural gaps detected. Claude cannot reliably extract and attribute content to this brand without additional entity anchoring.'}</p>
               <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">Induction Path: <strong>Deterministic Extraction</strong> | Latency: <strong>${isOcTanner ? '163ms' : (isHomepage ? '79ms' : '181ms')}</strong> | Diagnosis: <strong>${isOcTanner ? 'Compute Tax Friction' : 'Structural Dissonance'}</strong></div>
               
               ${linkParityHTML}
